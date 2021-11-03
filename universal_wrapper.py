@@ -17,7 +17,7 @@ class UniversalWrapper():
                 if key == 'root' and value == True:
                     output = 'sudo '+output
                     continue
-                output += '--'+str(key)+' '
+                output += '--'+str(key.replace('_', self.divider))+' '
                 if not value == True:
                     output += str(value)+' '
             output = self.run_cmd(output)
