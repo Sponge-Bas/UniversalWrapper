@@ -19,7 +19,8 @@ Example: clone a library
 
 ```python
 
-git = uw('git')
-git.clone("
+git = uw('git', divider='-')
+git.clone("https://github.com/Basdbruijne/UniversalWrapper.git")
+git.diff(name_only=True)
 ```
 
