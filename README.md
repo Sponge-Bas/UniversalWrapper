@@ -2,7 +2,7 @@
 Use any shell command in python conveniently.
 
 Based on subprocess, the universal wrapper provides an intuitive wrapper around any cli.
-Only tested on ubuntu.
+Tested on ubuntu only.
 
 Example: create and delete lxd containers
 
@@ -21,6 +21,9 @@ Example: clone a library
 
 git = uw('git', divider='-')
 git.clone("https://github.com/Basdbruijne/UniversalWrapper.git")
-git.diff(name_only=True)
+```
+check git diff files:
+```python
+diff = git.diff(name_only=True)
 ```
 
