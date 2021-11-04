@@ -39,3 +39,4 @@ Limitations:
 notify_send("title", "subtitle", i="face-wink") # is possible
 notify_send(i="face-wink", "title", "subtitle") # will give an error
 ```
+ - You tell me, open a bug if you would like me to add something
