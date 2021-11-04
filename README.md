@@ -18,7 +18,6 @@ lxc.delete("testcontainer", force=True)
 Example: clone a library
 
 ```python
-
 git = uw('git', divider='-')
 git.clone("https://github.com/Basdbruijne/UniversalWrapper.git")
 ```
@@ -30,9 +29,7 @@ diff = git.diff(name_only=True)
 Example: send a notification
 
 ```python
-
 notify_send=uw('notify-send')
-notify_send.title("subtitle") 
-# I want to get this to notify_send("title", "subtitle"), but its still in the works
+notify_send("title", "subtitle", i="face-wink")
 ```
 
