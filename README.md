@@ -33,6 +33,9 @@ notify_send=uw('notify-send')
 notify_send("title", "subtitle", i="face-wink")
 ```
 
+The argument `(root=True)` will trigger `sudo ` in the command.
+
+
 Limitations:
  - positional argument cannot follow keyword argument, for example:
 ```python
