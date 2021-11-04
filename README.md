@@ -25,6 +25,7 @@ check git diff files:
 ```python
 diff = git.diff(name_only=True)
 ```
+Here, the divider specifies how different cli's difine between words. E.g. for git, the command `name_only` will transform to `name-only`. By default `divider=" "`. Camel case is not yet supported.
 
 Example: send a notification
 
