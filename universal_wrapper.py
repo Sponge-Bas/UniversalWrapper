@@ -44,5 +44,4 @@ class UniversalWrapper:
             command = self.cmd + " " + name.replace("_", self.divider) + " "
             command += self.generate_command(*args, **kwargs)
             return self.run_cmd(command)
-
         return _wrapped
