@@ -7,12 +7,22 @@ class UniversalWrapper:
         self.divider = divider
 
     def run_cmd(self, command):
-        return subprocess.check_output(command, shell=True).decode("ascii").splitlines()
+        command = self.input_modifier(command)
+        output = (
+            subprocess.check_output(command, shell=True).decode("ascii").splitlines()
+        )
+        return self.output_modifier(output)
 
     def __call__(self, *args, **kwargs):
         command = self.cmd + " "
         command += self.generate_command(*args, **kwargs)
         return self.run_cmd(command)
+
+    def input_modifier(self, command):
+        return command
+
+    def output_modifier(self, output):
+        return output
 
     def generate_command(self, *args, **kwargs):
         command = ""
