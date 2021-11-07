@@ -14,8 +14,7 @@ class UniversalWrapper:
         return self.output_modifier(output)
 
     def __call__(self, *args, **kwargs):
-        command = self.cmd + " "
-        command += self.generate_command(*args, **kwargs)
+        command = self.cmd + " " + self.generate_command(*args, **kwargs)
         return self.run_cmd(command)
 
     def input_modifier(self, command):
