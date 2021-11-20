@@ -25,7 +25,9 @@ check git diff files:
 ```python
 diff = git.diff(name_only=True)
 ```
-Here, the `divider` specifies how different cli's define between words. E.g. for `git`, the command `name_only` will transform to `name-only`. For `openstack`, commands are saperated by spaces, so `openstack.network_list()` will call `openstack network list`. By default `divider=" "`. Camel case is not yet supported.
+Here, the `divider` specifies how different cli's define between words. E.g. for `git`, the command `name_only` will transform to `name-only`. For `openstack`, commands are saperated by spaces, so `openstack.network_list()` will call `openstack network list`. By default `divider=" "`. The class divider can alse be defined.
+
+For example, `example=uw("example",divider = "-", class_divider = "=")` will result in `example.about.class_dividers()` calling `example=about=class-dividers`.
 
 Example: send a notification
 
