@@ -2,17 +2,12 @@ import subprocess
 
 
 class UniversalWrapper:
-    def __init__(self, cmd, divider=" ", class_divider=None):
+    def __init__(self, cmd, divider=" ", class_divider=" "):
         self.cmd = cmd
         self.divider = divider
-        if class_divider is None:
-            self.class_divider = divider
-        else:
-            self.class_divider = class_divider
+        self.class_divider = class_divider
 
     def run_cmd(self, command):
-        print(command)
-        print("--")
         command = self.input_modifier(command)
         output = subprocess.check_output(command, shell=True)
         return self.output_modifier(output)
