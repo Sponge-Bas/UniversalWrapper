@@ -1,3 +1,8 @@
+# Copyright 2021 by Bas de Bruijne
+# All rights reserved.
+# Universal Wrapper comes with ABSOLUTELY NO WARRANTY, the writer can not be
+# held responsible for any problems caused by the use of this script.
+
 import subprocess
 
 
