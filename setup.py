@@ -8,7 +8,7 @@ setup(
   author = 'Bas de Bruijne',
   author_email = 'basdbruijne@gmail.com',
   url = 'https://github.com/Basdbruijne/UniversalWrapper',
-  download_url = 'https://github.com/Basdbruijne/UniversalWrapper/archive/refs/tags/v0.1.tar.gz',
+  download_url = 'https://github.com/Basdbruijne/UniversalWrapper/archive/refs/tags/v0.3.tar.gz',
   keywords = ['wrapper', 'cli', 'subprocess'],
   classifiers=[  # Optional
     # How mature is this project? Common values are
