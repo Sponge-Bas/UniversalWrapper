@@ -25,7 +25,7 @@ class UniversalWrapper:
         return command
 
     def output_modifier(self, output):
-        return output.decode("ascii").splitlines()
+        return output.decode("ascii")
 
     def generate_command(self, *args, **kwargs):
         command = ""
