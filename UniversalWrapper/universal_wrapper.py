@@ -15,10 +15,8 @@ class UniversalWrapper:
 
     def run_cmd(self, command):
         command = self.input_modifier(command)
-        for flag in self.flags_to_remove:
-            command = command.replace(flag, "")
+        command = self.remove_flags(command)
         output = subprocess.check_output(command, shell=True)
-        self.flags_to_remove = []
         return self.output_modifier(output)
 
     def __call__(self, *args, **kwargs):
@@ -36,17 +34,26 @@ class UniversalWrapper:
         for string in args:
             command += str(string) + " "
         for key, value in kwargs.items():
-            if key == "root" and value == True:
+            if key == "root" and value is True:
                 command = "sudo " + command
-                continue
-            if value is False:
+            elif value is False:
                 self.flags_to_remove.append(self.add_dashes(key))
-                continue
             else:
-                command += self.add_dashes(key)
-            if not value is True:
-                command += str(value) + " "
+                for value in self.to_list(value):
+                    command += self.add_dashes(key)
+                    command += (str(value) + " ") * (not value is True)
         return command
+
+    def remove_flags(self, command):
+        for flag in self.flags_to_remove:
+            command = command.replace(flag.strip(), "")
+        self.flags_to_remove = []
+        return command
+
+    def to_list(self, values):
+        if type(values) != list:
+            values = [values]
+        return values
 
     def add_dashes(self, flag):
         if len(str(flag)) > 1:
