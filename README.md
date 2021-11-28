@@ -46,6 +46,7 @@ notify_send("title", "subtitle", i="face-wink")
 ```
 
 The argument `(root=True)` will trigger `sudo ` in the command.
+In order to reuse a flag, enter a list: `exampleflag=["example", "flag"]` will trigger `--exampleflag example --exampleflag flag`. Reusing the same flag can only be done when the flags are used after eachother. 
 
 # Advanced usage
 
@@ -61,6 +62,7 @@ class Example(uw):
     package needs to be used.
     """
         command = self.input_modifier(command)
+        command = self.remove_flags(command)
         output = subprocess.check_output(command, shell=True)
         return self.output_modifier(output)
 
