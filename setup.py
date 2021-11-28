@@ -2,13 +2,12 @@ from distutils.core import setup
 setup(
   name = 'UniversalWrapper',
   packages = ['UniversalWrapper'],
-  version = '0.03',
+  version = '0.10',
   license='MIT',
   description = "Universal wrapper to make cli's easlier to use",
   author = 'Bas de Bruijne',
   author_email = 'basdbruijne@gmail.com',
   url = 'https://github.com/Basdbruijne/UniversalWrapper',
-  download_url = 'https://github.com/Basdbruijne/UniversalWrapper/archive/refs/tags/v0.4.tar.gz',
   keywords = ['wrapper', 'cli', 'subprocess'],
   classifiers=[  # Optional
     # How mature is this project? Common values are

@@ -4,13 +4,32 @@
 # held responsible for any problems caused by the use of this script.
 
 import subprocess
+import json
+import yaml
 
 
 class UniversalWrapper:
-    def __init__(self, cmd, divider=" ", class_divider=" "):
-        self.cmd = cmd
-        self.divider = divider
-        self.class_divider = class_divider
+    def __init__(
+        self,
+        cmd,
+        divider="-",
+        class_divider=" ",
+        flag_divider="-",
+        input_modifiers={},
+        output_modifiers={
+            "decode": True,
+            "split_lines": False,
+            "parse_yaml": False,
+            "parse_json": False,
+        },
+    ):
+        self.uw_settings = {}
+        self.uw_settings["cmd"] = cmd
+        self.uw_settings["divider"] = divider
+        self.uw_settings["class_divider"] = class_divider
+        self.uw_settings["flag_divider"] = flag_divider
+        self.uw_settings["input_modifiers"] = input_modifiers
+        self.uw_settings["output_modifiers"] = output_modifiers
         self.flags_to_remove = []
 
     def run_cmd(self, command):
@@ -20,14 +39,26 @@ class UniversalWrapper:
         return self.output_modifier(output)
 
     def __call__(self, *args, **kwargs):
-        command = self.cmd + " " + self.generate_command(*args, **kwargs)
+        command = self.uw_settings["cmd"] + " " + self.generate_command(*args, **kwargs)
         return self.run_cmd(command)
 
     def input_modifier(self, command):
+        command = command.split(" ")
+        for input_command, index in self.uw_settings["input_modifiers"].items():
+            command.insert(index, input_command)
+        command = " ".join(command)
         return command
 
     def output_modifier(self, output):
-        return output.decode("ascii")
+        if self.uw_settings["output_modifiers"]["decode"]:
+            output = output.decode("ascii")
+        if self.uw_settings["output_modifiers"]["split_lines"]:
+            output = output.splitlines()
+        if self.uw_settings["output_modifiers"]["parse_json"]:
+            output = json.loads(output)
+        if self.uw_settings["output_modifiers"]["parse_yaml"]:
+            output = yaml.load(output)
+        return output
 
     def generate_command(self, *args, **kwargs):
         command = ""
@@ -57,14 +88,20 @@ class UniversalWrapper:
 
     def add_dashes(self, flag):
         if len(str(flag)) > 1:
-            return "--" + str(flag.replace("_", self.divider)) + " "
+            return "--" + str(flag.replace("_", self.uw_settings["flag_divider"])) + " "
         else:
             return "-" + str(flag) + " "
 
     def __getattr__(self, attr):
         subclass = UniversalWrapper(
-            self.cmd + self.class_divider + attr.replace("_", self.divider),
-            self.divider,
-            self.class_divider,
+            self.uw_settings["cmd"]
+            + self.uw_settings["class_divider"]
+            + attr.replace("_", self.uw_settings["divider"]),
+            self.uw_settings["divider"],
+            self.uw_settings["class_divider"],
         )
         return subclass
+
+
+def __getattr__(attr):
+    return UniversalWrapper(attr)
