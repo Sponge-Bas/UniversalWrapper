@@ -14,9 +14,8 @@ pip install UniversalWrapper
 ## Example: create and delete lxd containers
 
 ```python
-from UniversalWrapper import UniversalWrapper as uw
+from UniversalWrapper import lxc
 
-lxc = uw('lxc')
 lxc.launch("ubuntu:20.04", "testcontainer")
 
 lxc.delete("testcontainer", force=True)
@@ -25,23 +24,21 @@ lxc.delete("testcontainer", force=True)
 ## Example: clone a library
 
 ```python
-git = uw('git', divider='-')
+from UniversalWrapper import git
+
 git.clone("https://github.com/Basdbruijne/UniversalWrapper.git")
 ```
 check git diff files:
 ```python
 diff = git.diff(name_only=True)
 ```
-Here, the `divider` specifies how different cli's define between words, underscores in the command will be transformed into the divider. A `class_divider` can also be defined, the dots between classes will be transformed to the class divider. By default `divider=" ", class_divider=" "`.
-
-For example, `example=uw("example",divider = "-", class_divider = "=")` will result in `example.about.class_dividers()` calling `example=about=class-dividers`.
-
 `True` and `False` flags are not forwarded to the cli. Instead `True` will add the flag only (without arguments) and `False` will remove the flag in case it is present elsewhere in the command. The latter can be useful is input overrides are used (see advanced usage). To avoid this behaviour, pass True or False as strings.
 
 ## Example: send a notification
 
 ```python
-notify_send=uw('notify-send')
+from UniversalWrapper import notify_send
+
 notify_send("title", "subtitle", i="face-wink")
 ```
 

@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'UniversalWrapper',
   packages = ['UniversalWrapper'],
-  version = '0.10',
+  version = '0.32',
   license='MIT',
   description = "Universal wrapper to make cli's easlier to use",
   author = 'Bas de Bruijne',
@@ -13,7 +13,7 @@ setup(
     # How mature is this project? Common values are
     #   3 - Alpha
     #   4 - Beta
-    #   5 - Production/Stable
+    #   5 - Production/ Stable
     'Development Status :: 3 - Alpha',
 
     # Indicate who your project is intended for
