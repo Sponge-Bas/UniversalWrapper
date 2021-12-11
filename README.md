@@ -2,7 +2,7 @@
 Use any shell command in python conveniently.
 
 Based on subprocess, the universal wrapper provides an intuitive wrapper around any cli.
-Tested on ubuntu only. The development is inspired by my jealousy toward bash scripts, where command line tools can be integrated seamlessly into the code. This tool provides a similar level of integration, without having to manually write wappers for the specific cli's. 
+Tested on ubuntu only. The development is inspired by my jealousy toward bash scripts, where command line tools can be integrated seamlessly into the code. This tool provides a similar level of integration, without having to manually write wappers for the specific cli's.
 
 # Getting started
 
@@ -53,21 +53,18 @@ from universalwrapper import lxc
 
 lxc.uw_settings
 >>
-lxc.uw_settings["cmd"]: str # base command
-lxc.uw_settings["divider"]: str = '-' # string to replace '_' with in command
-lxc.uw_settings["class_divider"]: str = ' ' # string to put between classes
-lxc.uw_settings["flag_divider"]: str = '-' # string to replace '_' with in flags
-lxc.uw_settings["debug"]: bool = False # if True, don't execute command but just print it
-lxc.uw_settings["input_modifiers"]: dict = { # order matters!
-    "add": dict: {str: int, str: int} = {} # {extra command, index where to add it}
-    "move": dict: {str: int, str: int} = {} # {extra command, index where to move it to}
-    "custom": list[str] # custom command: e.g. "command.reverse()"
-},
-lxc.uw_settings["output_modifiers"]: dict = { # speaks for itself mostly, order matters!
-    "decode": bool = True,
-    "split_lines": bool = False,
-    "parse_yaml": bool =  False,
-    "parse_json": bool = False,
-    "custom": list[str], # custom command: e.g. "output = output.upper()"
+lxc.uw_settings.cmd: str # base command
+lxc.uw_settings.divider: str = '-' # string to replace '_' with in command
+lxc.uw_settings.class_divider: str = ' ' # string to put between classes
+lxc.uw_settings.flag_divider: str = '-' # string to replace '_' with in flags
+lxc.uw_settings.debug: bool = False # if True, don't execute command but just print it
+lxc.uw_settings.input_add: dict: {str: int, str: int} = {} # {extra command, index where to add it}
+lxc.uw_settings.input_move: dict: {str: int, str: int} = {} # {extra command, index where to move it to}
+lxc.uw_settings.input_custom: list[str] # custom command: e.g. "command.reverse()"
+lxc.uw_settings.output_decode: bool = True, # Decode output to str
+lxc.uw_settings.output_splitlines: bool = False, # Split output lines into list
+lxc.uw_settings.output_yaml: bool = True, # Try to parse yaml from output
+lxc.uw_settings.output_json: bool = True, # Try to parse json from output
+lxc.uw_settings.output_custom: list[str] # custom command: e.g. "output.reverse()"
 }
 ```

@@ -10,41 +10,54 @@ import sys
 from copy import copy
 
 
+class UWSettings:
+    __freeze = False
+
+    def __init__(self):
+        self.cmd = ""
+        self.divider = "-"
+        self.class_divider = " "
+        self.flag_divider = "-"
+        self.input_add = {}
+        self.input_move = {}
+        self.input_custom = []
+        self.output_decode = True
+        self.output_yaml = False
+        self.output_json = False
+        self.output_splitlines = False
+        self.output_custom = []
+        self.debug = False
+        self.__freeze = True
+
+    def __setattr__(self, key, value):
+        if self.__freeze and not hasattr(self, key):
+            raise ImportError(
+                f"Valid settings are limited to {[item for item in dir(self) if not item.startswith('_')]}"
+            )
+        object.__setattr__(self, key, value)
+
+
 class UniversalWrapper:
     def __init__(
         self,
         cmd,
-        divider="-",
-        class_divider=" ",
-        flag_divider="-",
-        input_modifiers={"add": {}, "move": {}, "custom": []},
-        output_modifiers={
-            "decode": True,
-            "split_lines": False,
-            "parse_yaml": False,
-            "parse_json": False,
-            "custom": [],
-        },
         uw_settings=None,
+        **kwargs,
     ):
         if uw_settings is None:
-            self.uw_settings = {}
-            self.uw_settings["cmd"] = cmd
-            self.uw_settings["divider"] = divider
-            self.uw_settings["class_divider"] = class_divider
-            self.uw_settings["flag_divider"] = flag_divider
-            self.uw_settings["input_modifiers"] = input_modifiers
-            self.uw_settings["output_modifiers"] = output_modifiers
-            self.uw_settings["debug"] = False
+            self.uw_settings = UWSettings()
+            for key, value in kwargs.items():
+                if hasattr(self.uw_settings, key):
+                    setattr(self.uw_settings, key, value)
         else:
             self.uw_settings = uw_settings
-            self.uw_settings["cmd"] = cmd
+        self.uw_settings.cmd = cmd
         self._flags_to_remove = []
 
     def _run_cmd(self, command):
         command = self._input_modifier(command)
         command = self._remove_flags(command)
-        if self.uw_settings["debug"]:
+        if self.uw_settings.debug:
             print("Generated command:")
             print(command)
         else:
@@ -53,11 +66,11 @@ class UniversalWrapper:
 
     def __call__(self, *args, **kwargs):
         command = (
-            self.uw_settings["cmd"].replace("_", self.uw_settings["divider"])
+            self.uw_settings.cmd.replace("_", self.uw_settings.divider)
             + " "
             + self._generate_command(*args, **kwargs)
         )
-        return self._run_cmd(command)
+        return self._run_cmd("sudo " * self._root + command)
 
     def _inset_command(self, command, input_command, index):
         if index == -1:
@@ -70,65 +83,57 @@ class UniversalWrapper:
 
     def _input_modifier(self, command):
         command = command.split(" ")
-        for modifier, action in self.uw_settings["input_modifiers"].items():
-            if modifier == "add" or modifier == "move":
-                for input_command, index in action.items():
-                    extra_flag = ""
-                    if modifier == "move":
-                        if input_command in command:
-                            command_index = command.index(input_command)
-                            command.pop(command_index)
-                            if input_command.startswith("-") and not command[
-                                command_index
-                            ].startswith("-"):
-                                extra_flag = " " + command[command_index]
-                                command.pop(command_index)
-                        else:
-                            continue
-                    command = self._inset_command(
-                        command, input_command + extra_flag, index
-                    )
-            elif modifier == "custom":
-                for cmd in action:
-                    exec(cmd)
+        for input_command, index in self.uw_settings.input_add.items():
+            command = self._inset_command(command, input_command, index)
+        for input_command, index in self.uw_settings.input_move.items():
+            extra_flag = ""
+            if input_command in command:
+                command_index = command.index(input_command)
+                command.pop(command_index)
+                if input_command.startswith("-") and not command[
+                    command_index
+                ].startswith("-"):
+                    extra_flag = " " + command[command_index]
+                    command.pop(command_index)
+                command = self._inset_command(
+                    command, input_command + extra_flag, index
+                )
+        for cmd in self.uw_settings.input_custom:
+            exec(cmd)
         command = " ".join(command)
         if command[0] == " ":
             command = command[1:]
         return command
 
     def _output_modifier(self, output):
-        for key, value in self.uw_settings["output_modifiers"].items():
-            if key == "custom":
-                for command in value:
-                    exec(command)
-            if not value is True:
-                continue
-            elif key == "decode":
-                output = output.decode("ascii")
-            elif key == "split_lines":
-                output = output.splitlines()
-            elif key == "parse_json":
-                try:
-                    output = json.loads(output)
-                except Exception as e:
-                    print("Parse json failed")
-                    print(e)
-            elif key == "parse_yaml":
-                try:
-                    output = yaml.safe_load(output)
-                except Exception as e:
-                    print("Parse yaml failed")
-                    print(e)
-
+        if self.uw_settings.output_decode:
+            output = output.decode("ascii")
+        if self.uw_settings.output_yaml:
+            try:
+                output = yaml.safe_load(output)
+            except Exception as e:
+                print("Parse yaml failed")
+                print(e)
+        if self.uw_settings.output_json:
+            try:
+                output = json.loads(output)
+            except Exception as e:
+                print("Parse json failed")
+                print(e)
+        if self.uw_settings.output_splitlines:
+            output = output.splitlines()
+        for cmd in self.uw_settings.output_custom:
+            exec(cmd)
         return output
 
     def _generate_command(self, *args, **kwargs):
         command = ""
+        self._root = False
         for string in args:
             command += str(string) + " "
         for key, value in kwargs.items():
             if key == "root" and value is True:
-                command = "sudo " + command
+                self._root = True
             elif value is False:
                 self._flags_to_remove.append(self._add_dashes(key))
             else:
@@ -138,7 +143,7 @@ class UniversalWrapper:
         return command
 
     def _remove_flags(self, command):
-        input_modifiers = list(self.uw_settings["input_modifiers"]["add"].keys())
+        input_modifiers = list(self.uw_settings.input_add.keys())
         for flag in self._flags_to_remove:
             for input_modifier in input_modifiers:
                 if flag.strip() in input_modifier:
@@ -153,15 +158,15 @@ class UniversalWrapper:
 
     def _add_dashes(self, flag):
         if len(str(flag)) > 1:
-            return "--" + str(flag.replace("_", self.uw_settings["flag_divider"])) + " "
+            return "--" + str(flag.replace("_", self.uw_settings.flag_divider)) + " "
         else:
             return "-" + str(flag) + " "
 
     def __getattr__(self, attr):
         subclass = UniversalWrapper(
-            self.uw_settings["cmd"]
-            + self.uw_settings["class_divider"]
-            + attr.replace("_", self.uw_settings["divider"]),
+            self.uw_settings.cmd
+            + self.uw_settings.class_divider
+            + attr.replace("_", self.uw_settings.divider),
             uw_settings=copy(self.uw_settings),
         )
         return subclass
