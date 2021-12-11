@@ -63,8 +63,8 @@ lxc.uw_settings.input_move: dict: {str: int, str: int} = {} # {extra command, in
 lxc.uw_settings.input_custom: list[str] # custom command: e.g. "command.reverse()"
 lxc.uw_settings.output_decode: bool = True, # Decode output to str
 lxc.uw_settings.output_splitlines: bool = False, # Split output lines into list
-lxc.uw_settings.output_yaml: bool = True, # Try to parse yaml from output
-lxc.uw_settings.output_json: bool = True, # Try to parse json from output
+lxc.uw_settings.output_yaml: bool = False, # Try to parse yaml from output
+lxc.uw_settings.output_json: bool = False, # Try to parse json from output
 lxc.uw_settings.output_custom: list[str] # custom command: e.g. "output.reverse()"
 }
 ```
