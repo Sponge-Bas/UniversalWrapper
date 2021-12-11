@@ -14,7 +14,7 @@ pip install UniversalWrapper
 ## Example: create and delete lxd containers
 
 ```python
-from UniversalWrapper import lxc
+from universalwrapper import lxc
 
 lxc.launch("ubuntu:20.04", "testcontainer")
 
@@ -24,7 +24,7 @@ lxc.delete("testcontainer", force=True)
 ## Example: clone a library
 
 ```python
-from UniversalWrapper import git
+from universalwrapper import git
 
 git.clone("https://github.com/Basdbruijne/UniversalWrapper.git")
 ```
@@ -37,7 +37,7 @@ diff = git.diff(name_only=True)
 ## Example: send a notification
 
 ```python
-from UniversalWrapper import notify_send
+from universalwrapper import notify_send
 
 notify_send("title", "subtitle", i="face-wink")
 ```
@@ -49,7 +49,7 @@ The argument `(root=True)` will trigger `sudo ` in the command.
 The universal wrapper does not have any functions build in that are made for one specific cli. If there are repetitive modifications to commands that need to be made, this can be done by editing the uw_settings:
 
 ```python
-from UniversalWrapper import lxc
+from universalwrapper import lxc
 
 lxc.uw_settings
 >>
