@@ -1,8 +1,8 @@
 from distutils.core import setup
 setup(
   name = 'UniversalWrapper',
-  packages = ['UniversalWrapper'],
-  version = '0.32',
+  packages = ['universalwrapper'],
+  version = '0.36',
   license='MIT',
   description = "Universal wrapper to make cli's easlier to use",
   author = 'Bas de Bruijne',

@@ -46,42 +46,28 @@ The argument `(root=True)` will trigger `sudo ` in the command.
 
 # Advanced usage
 
-The universal wrapper does not have any functions build in that are made for one specific cli. If there are repetitive modifications to commands that need to be made, this can be done by inheriting the UniversalWrapper class:
+The universal wrapper does not have any functions build in that are made for one specific cli. If there are repetitive modifications to commands that need to be made, this can be done by editing the uw_settings:
 
 ```python
-from UniversalWrapper import UniversalWrapper as uw
+from UniversalWrapper import lxc
 
-class Example(uw):
-    def run_cmd(self, command):
-    """
-    Change this function if instead of subprocess.check_output a different
-    package needs to be used.
-    """
-        command = self.input_modifier(command)
-        output = subprocess.check_output(command, shell=True)
-        return self.output_modifier(output)
-
-    def input_modifier(self, command):
-    """
-    Change this function to define custom actions that need to be applied
-    on every input.
-    """
-        return command
-
-    def output_modifier(self, output):
-    """
-    Change this function to apply some custom processing on every command 
-    output.
-    """
-        return output.decode("ascii")
-        
-example = Example('example')
+lxc.uw_settings
+>>
+lxc.uw_settings["cmd"]: str # base command
+lxc.uw_settings["divider"]: str = '-' # string to replace '_' with in command
+lxc.uw_settings["class_divider"]: str = ' ' # string to put between classes
+lxc.uw_settings["flag_divider"]: str = '-' # string to replace '_' with in flags
+lxc.uw_settings["debug"]: bool = False # if True, don't execute command but just print it
+lxc.uw_settings["input_modifiers"]: dict = { # order matters!
+    "add": dict: {str: int, str: int} = {} # {extra command, index where to add it}
+    "move": dict: {str: int, str: int} = {} # {extra command, index where to move it to}
+    "custom": list[str] # custom command: e.g. "command.reverse()"
+},
+lxc.uw_settings["output_modifiers"]: dict = { # speaks for itself mostly, order matters!
+    "decode": bool = True,
+    "split_lines": bool = False,
+    "parse_yaml": bool =  False,
+    "parse_json": bool = False,
+    "custom": list[str], # custom command: e.g. "output = output.upper()"
+}
 ```
-
-# Limitations:
- - positional argument cannot follow keyword argument, for example:
-```python
-notify_send("title", "subtitle", i="face-wink") # is possible
-notify_send(i="face-wink", "title", "subtitle") # will give an error
-```
- - You tell me, open a bug if you would like me to add something
