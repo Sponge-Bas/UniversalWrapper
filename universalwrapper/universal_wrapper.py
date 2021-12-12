@@ -47,8 +47,7 @@ class UniversalWrapper:
         if uw_settings is None:
             self.uw_settings = UWSettings()
             for key, value in kwargs.items():
-                if hasattr(self.uw_settings, key):
-                    setattr(self.uw_settings, key, value)
+                setattr(self.uw_settings, key, value)
         else:
             self.uw_settings = uw_settings
         self.uw_settings.cmd = cmd

@@ -59,11 +59,22 @@ class TestUniversalWrapper(unittest.TestCase):
         uw_test.run.runs("a", "b")
         mock_check_output.assert_called_with("b a runs run uw-test", shell=True)
 
+        universal_wrapper.run_command("a")
+        mock_check_output.assert_called_with("run-command a", shell=True)
+
     def test_change_settings(self):
         uw_test = UniversalWrapper("uw_test")
         uw_test.uw_settings.debug = True
         with self.assertRaises(Exception) as context:
             uw_test.uw_settings.non_existant_setting = True
+
+        self.assertTrue("Valid settings are limited to" in str(context.exception))
+
+    def test_set_settings(self):
+        uw_test = UniversalWrapper("uw_test", divider="foo")
+        self.assertEqual(uw_test.uw_settings.divider, "foo")
+        with self.assertRaises(Exception) as context:
+            uw_test = UniversalWrapper("uw_test", bar="foo")
 
         self.assertTrue("Valid settings are limited to" in str(context.exception))
 
