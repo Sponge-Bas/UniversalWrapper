@@ -100,5 +100,4 @@ lxc.uw_settings.output_splitlines: bool = False, # Split output lines into list
 lxc.uw_settings.output_yaml: bool = False, # Try to parse yaml from output
 lxc.uw_settings.output_json: bool = False, # Try to parse json from output
 lxc.uw_settings.output_custom: list[str] # custom command: e.g. "output.reverse()"
-}
 ```
