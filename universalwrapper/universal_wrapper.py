@@ -68,14 +68,15 @@ class UniversalWrapper:
         for key, values in kwargs.items():
             if key == "root" and values is True:
                 self._root = True
-            elif values is False:
-                self._flags_to_remove.append(self._add_dashes(key))
             else:
                 if type(values) != list:
                     values = [values]
                 for value in values:
-                    command.append(self._add_dashes(key))
-                    command[-1] += (" " + str(value)) * (not value is True)
+                    if value is False:
+                        self._flags_to_remove.append(self._add_dashes(key))
+                    else:
+                        command.append(self._add_dashes(key))
+                        command[-1] += (" " + str(value)) * (not value is True)
         return command
 
     def _add_dashes(self, flag):

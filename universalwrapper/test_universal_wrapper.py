@@ -62,6 +62,14 @@ class TestUniversalWrapper(unittest.TestCase):
         uw_test.run("a", "b", barfoo=False)
         mock_check_output.assert_called_with("uw-test run a b --bar", shell=True)
 
+        uw_test.uw_settings.input_add = {"--bar foo": -1}
+        uw_test.run(bar="bar")
+        mock_check_output.assert_called_with(
+            "uw-test run --bar bar --bar foo", shell=True
+        )
+        uw_test.run(bar=[False, "bar"])
+        mock_check_output.assert_called_with("uw-test run --bar bar", shell=True)
+
     @patch("universal_wrapper.subprocess.check_output")
     def test_input_move(self, mock_check_output):
         uw_test = UniversalWrapper("uw_test")

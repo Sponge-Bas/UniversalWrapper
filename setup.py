@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'UniversalWrapper',
   packages = ['universalwrapper'],
-  version = '1.1',
+  version = '1.2',
   license='MIT',
   description = "Universal wrapper to make cli's easlier to use",
   author = 'Bas de Bruijne',
