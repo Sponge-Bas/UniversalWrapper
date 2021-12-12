@@ -61,7 +61,7 @@ class UniversalWrapper:
             print(command)
         else:
             output = subprocess.check_output(command.strip(), shell=True)
-        return self._output_modifier(output)
+            return self._output_modifier(output)
 
     def __call__(self, *args, **kwargs):
         command = (
