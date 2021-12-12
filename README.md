@@ -15,10 +15,7 @@ UniversalWrapper uses a set of simple rules to convert python commands to bash c
 ```python
 from universalwrapper import uw_example
 uw_example.run.command("foo", bar="bar", b="foo", foo_bar=True)
-```
-Calls
-```bash
-uw-example run command foo --bar bar -b foo --foo-bar
+# calls $ uw-example run command foo --bar bar -b foo --foo-bar
 ```
 The default conversion rules are:
  - "_" is changed to "-" (see `uw_settings.divider` and `uw_settings.flag_divider`)
@@ -26,16 +23,14 @@ The default conversion rules are:
  - A argument is converted to a string
  - Keyword arguments are converted to flags, if `arg=True`, only the flag is use (no arguments)
    if `arg=False` the flag is removed if it is present in `uw_settings.input_add`
+ - Keyword arguments with list repeat the flag: `foo=['bar', 'bar']` calls `--foo bar --foo bar`
 
 If you don't want to import every single command, use:
 ```python
 import universalwrapper as uw
 
 uw.example("foo", "bar")
-```
-Calls
-```bash
-example foo bar
+# calls $ example foo bar
 ```
 
 Repetitive commands or output modifications can be set `uw_settings`, see advanced usage.
