@@ -10,86 +10,86 @@ class TestUniversalWrapper(unittest.TestCase):
         uw_test = UniversalWrapper("uw_test")
 
         uw_test("a")
-        mock_check_output.assert_called_with("uw-test a", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "a"])
         uw_test.run("a")
-        mock_check_output.assert_called_with("uw-test run a", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "run", "a"])
         uw_test.run("a", b=True)
-        mock_check_output.assert_called_with("uw-test run a -b", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "run", "a", "-b"])
         uw_test.run("a", bar=True)
-        mock_check_output.assert_called_with("uw-test run a --bar", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "run", "a", "--bar"])
         uw_test.run("a", bar=[True, True])
-        mock_check_output.assert_called_with("uw-test run a --bar --bar", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "run", "a", "--bar", "--bar"])
         uw_test.run("a", b="foo")
-        mock_check_output.assert_called_with("uw-test run a -b foo", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "run", "a", "-b", "foo"])
         uw_test.run("a", bar="foo")
-        mock_check_output.assert_called_with("uw-test run a --bar foo", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "run", "a", "--bar", "foo"])
         uw_test.run("a", bar=["foo", "bar"])
-        mock_check_output.assert_called_with(
-            "uw-test run a --bar foo --bar bar", shell=True
+        mock_check_output.assert_called_with([
+            "uw-test", "run", "a", "--bar", "foo", "--bar", "bar"]
         )
         uw_test.run.runs("a", "b")
-        mock_check_output.assert_called_with("uw-test run runs a b", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "run", "runs", "a", "b"])
         uw_test.run.runs("a", "b", root=True)
-        mock_check_output.assert_called_with("sudo uw-test run runs a b", shell=True)
+        mock_check_output.assert_called_with(["sudo", "uw-test", "run", "runs", "a", "b"])
 
     @patch("universal_wrapper.subprocess.check_output")
     def test_input_add(self, mock_check_output):
         uw_test = UniversalWrapper("uw_test")
         uw_test.uw_settings.input_add = {"bar": -1}
         uw_test.run.runs("a", "b")
-        mock_check_output.assert_called_with("uw-test run runs a b bar", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "run", "runs", "a", "b", "bar"])
         uw_test.uw_settings.input_add = {"--bar": -1, "foo": 0}
         uw_test.run("a", "b")
-        mock_check_output.assert_called_with("foo uw-test run a b --bar", shell=True)
+        mock_check_output.assert_called_with(["foo", "uw-test", "run", "a", "b", "--bar"])
         uw_test.run("a", "b", bar=False)
-        mock_check_output.assert_called_with("foo uw-test run a b", shell=True)
+        mock_check_output.assert_called_with(["foo", "uw-test", "run", "a", "b"])
         uw_test.uw_settings.input_add = {"--bar foo": -1, "--barfoo bar": -1}
         uw_test.run("a", "b")
-        mock_check_output.assert_called_with(
-            "uw-test run a b --bar foo --barfoo bar", shell=True
+        mock_check_output.assert_called_with([
+            "uw-test", "run", "a", "b", "--bar", "foo", "--barfoo", "bar"]
         )
         uw_test.run("a", "b", bar=False)
-        mock_check_output.assert_called_with("uw-test run a b --barfoo bar", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "run", "a", "b", "--barfoo", "bar"])
         uw_test.run("a", "b", barfoo=False)
-        mock_check_output.assert_called_with("uw-test run a b --bar foo", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "run", "a", "b", "--bar", "foo"])
         uw_test.uw_settings.input_add = {"--bar": -1, "--barfoo bar": -1}
         uw_test.run("a", "b")
-        mock_check_output.assert_called_with(
-            "uw-test run a b --bar --barfoo bar", shell=True
+        mock_check_output.assert_called_with([
+            "uw-test", "run", "a", "b", "--bar", "--barfoo", "bar"]
         )
         uw_test.run("a", "b", bar=False)
-        mock_check_output.assert_called_with("uw-test run a b --barfoo bar", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "run", "a", "b", "--barfoo", "bar"])
         uw_test.run("a", "b", barfoo=False)
-        mock_check_output.assert_called_with("uw-test run a b --bar", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "run", "a", "b", "--bar"])
 
         uw_test.uw_settings.input_add = {"--bar foo": -1}
         uw_test.run(bar="bar")
-        mock_check_output.assert_called_with(
-            "uw-test run --bar bar --bar foo", shell=True
+        mock_check_output.assert_called_with([
+            "uw-test", "run", "--bar", "bar", "--bar", "foo"]
         )
         uw_test.run(bar=[False, "bar"])
-        mock_check_output.assert_called_with("uw-test run --bar bar", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "run", "--bar", "bar"])
 
     @patch("universal_wrapper.subprocess.check_output")
     def test_input_move(self, mock_check_output):
         uw_test = UniversalWrapper("uw_test")
         uw_test.uw_settings.input_move = {"runs": 0}
         uw_test.run.runs("a", "b")
-        mock_check_output.assert_called_with("runs uw-test run a b", shell=True)
+        mock_check_output.assert_called_with(["runs", "uw-test", "run", "a", "b"])
         uw_test.uw_settings.input_move = {"uw-test": -1}
         uw_test.run.runs("a", "b")
-        mock_check_output.assert_called_with("run runs a b uw-test", shell=True)
+        mock_check_output.assert_called_with(["run", "runs", "a", "b", "uw-test"])
         uw_test.uw_settings.input_move = {"--bar": 1}
         uw_test.run.runs("a", bar="foo")
-        mock_check_output.assert_called_with("uw-test --bar foo run runs a", shell=True)
+        mock_check_output.assert_called_with(["uw-test", "--bar", "foo", "run", "runs", "a"])
 
         uw_test.uw_settings.input_move = {}
         uw_test.uw_settings.input_custom = ["command.reverse()"]
         uw_test.run.runs("a", "b")
-        mock_check_output.assert_called_with("b a runs run uw-test", shell=True)
+        mock_check_output.assert_called_with(["b", "a", "runs", "run", "uw-test"])
 
         universal_wrapper.run_command("a")
-        mock_check_output.assert_called_with("run-command a", shell=True)
+        mock_check_output.assert_called_with(["run-command", "a"])
 
     @patch("universal_wrapper.subprocess.check_output")
     def test_dividers(self, mock_check_output):
@@ -97,8 +97,8 @@ class TestUniversalWrapper(unittest.TestCase):
             "uw_test", class_divider="~", divider=" ", flag_divider="bar"
         )
         uw_test.run.runs("a", "b", bar_foo=True)
-        mock_check_output.assert_called_with(
-            "uw test~run~runs a b --barbarfoo", shell=True
+        mock_check_output.assert_called_with([
+            "uw", "test~run~runs", "a", "b", "--barbarfoo"]
         )
 
     def test_change_settings(self):

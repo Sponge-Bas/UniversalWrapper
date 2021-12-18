@@ -76,15 +76,15 @@ class UniversalWrapper:
                         self._flags_to_remove.append(self._add_dashes(key))
                     else:
                         command.append(self._add_dashes(key))
-                        command[-1] += (" " + str(value)) * (not value is True)
+                        command[-1] += f" {value}" * (not value is True)
         return command
 
     def _add_dashes(self, flag):
         """Adds the right number of dashes for the bash flags"""
         if len(str(flag)) > 1:
-            return "--" + str(flag.replace("_", self.uw_settings.flag_divider))
+            return f"--{flag.replace('_', self.uw_settings.flag_divider)}"
         else:
-            return "-" + str(flag)
+            return f"-{flag}"
 
     def _input_modifier(self, command):
         """Handles the input modifiers, e.g. adding and moving commands"""
@@ -112,14 +112,14 @@ class UniversalWrapper:
         command.insert(index, input_command)
         return command
 
-    def _run_cmd(self, command):
+    def _run_cmd(self, commands):
         """Forwards the genetared command to subprocess, or prints output if debug"""
-        cmd = " ".join([cmd.strip() for cmd in command if cmd]).strip()
+        cmd = [cmd for command in commands for cmd in command.split(" ")]
         if self.uw_settings.debug:
             print("Generated command:")
             print(cmd)
         else:
-            output = subprocess.check_output(cmd, shell=True)
+            output = subprocess.check_output(cmd)
             return self._output_modifier(output)
 
     def _output_modifier(self, output):
@@ -147,9 +147,7 @@ class UniversalWrapper:
     def __getattr__(self, attr):
         """Handles the creation of (sub)classes"""
         subclass = UniversalWrapper(
-            " ".join(self.uw_settings.cmd)
-            + self.uw_settings.class_divider
-            + attr.replace("_", self.uw_settings.divider),
+            f"{' '.join(self.uw_settings.cmd)}{self.uw_settings.class_divider}{attr.replace('_', self.uw_settings.divider)}",
             uw_settings=copy(self.uw_settings),
         )
         return subclass

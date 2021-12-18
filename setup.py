@@ -2,9 +2,9 @@ from distutils.core import setup
 setup(
   name = 'UniversalWrapper',
   packages = ['universalwrapper'],
-  version = '1.2',
+  version = '1.6',
   license='MIT',
-  description = "Universal wrapper to make cli's easlier to use",
+  long_description="Visit https://github.com/Basdbruijne/UniversalWrapper",
   author = 'Bas de Bruijne',
   author_email = 'basdbruijne@gmail.com',
   url = 'https://github.com/Basdbruijne/UniversalWrapper',
