@@ -31,6 +31,8 @@ class TestUniversalWrapper(unittest.TestCase):
         mock_check_output.assert_called_with(["uw-test", "run", "runs", "a", "b"])
         uw_test.run.runs("a", "b", root=True)
         mock_check_output.assert_called_with(["sudo", "uw-test", "run", "runs", "a", "b"])
+        uw_test.run.runs("arg with space")
+        mock_check_output.assert_called_with(["uw-test", "run", "runs", "arg with space"])
 
     @patch("universal_wrapper.subprocess.check_output")
     def test_input_add(self, mock_check_output):

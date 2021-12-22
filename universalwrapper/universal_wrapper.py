@@ -114,7 +114,12 @@ class UniversalWrapper:
 
     def _run_cmd(self, commands):
         """Forwards the genetared command to subprocess, or prints output if debug"""
-        cmd = [cmd for command in commands for cmd in command.split(" ")]
+        cmd = []
+        for command in commands:
+            if command.startswith("-"):
+                cmd.extend(command.split(" "))
+            else:
+                cmd.append(command)
         if self.uw_settings.debug:
             print("Generated command:")
             print(cmd)
