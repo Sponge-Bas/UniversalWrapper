@@ -130,7 +130,7 @@ class UniversalWrapper:
     def _output_modifier(self, output):
         """Modifies the subprocess' output according to uw_settings"""
         if self.uw_settings.output_decode:
-            output = output.decode("ascii")
+            output = output.decode()
         if self.uw_settings.output_yaml:
             try:
                 output = yaml.safe_load(output)
