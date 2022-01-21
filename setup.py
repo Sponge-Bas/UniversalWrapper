@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'UniversalWrapper',
   packages = ['universalwrapper'],
-  version = '1.6',
+  version = '1.8',
   license='MIT',
   long_description="Visit https://github.com/Basdbruijne/UniversalWrapper",
   author = 'Bas de Bruijne',
