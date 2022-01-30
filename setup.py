@@ -1,8 +1,8 @@
 from distutils.core import setup
 setup(
   name = 'UniversalWrapper',
-  packages = ['universalwrapper'],
-  version = '1.8',
+  packages = ['universalwrapper', 'uw'],
+  version = '1.13',
   license='MIT',
   long_description="Visit https://github.com/Basdbruijne/UniversalWrapper",
   author = 'Bas de Bruijne',

@@ -8,7 +8,7 @@ import json
 import yaml
 import sys
 from copy import copy
-
+import shlex
 
 class UWSettings:
     __freeze = False
@@ -114,12 +114,7 @@ class UniversalWrapper:
 
     def _run_cmd(self, commands):
         """Forwards the genetared command to subprocess, or prints output if debug"""
-        cmd = []
-        for command in commands:
-            if command.startswith("-"):
-                cmd.extend(command.split(" "))
-            else:
-                cmd.append(command)
+        cmd = shlex.split(" ".join(commands))
         if self.uw_settings.debug:
             print("Generated command:")
             print(cmd)
