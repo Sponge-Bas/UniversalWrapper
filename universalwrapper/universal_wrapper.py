@@ -10,6 +10,7 @@ import sys
 from copy import copy
 import shlex
 
+
 class UWSettings:
     __freeze = False
 
@@ -64,6 +65,8 @@ class UniversalWrapper:
         command = []
         self._root = False
         for string in args:
+            if " " in string:
+                string = f"'{string}'"
             command.append(str(string))
         for key, values in kwargs.items():
             if key == "root" and values is True:
