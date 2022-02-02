@@ -65,7 +65,7 @@ class UniversalWrapper:
         command = []
         self._root = False
         for string in args:
-            if " " in string:
+            if " " in str(string):
                 string = f"'{string}'"
             command.append(str(string))
         for key, values in kwargs.items():
