@@ -2,7 +2,7 @@
 Use any shell command in python conveniently.
 
 Based on subprocess, the universal wrapper provides an intuitive wrapper around any cli.
-Tested on ubuntu only. The development is inspired by my jealousy toward bash scripts, where command line tools can be integrated seamlessly into the code. This tool provides a similar level of integration, without having to manually write wrappers for the specific cli's.
+Tested on ubuntu only.
 
 # Getting started
 
