@@ -1,5 +1,5 @@
 # UniversalWrapper
-Use any shell command in python conveniently.
+UniversalWrapper is a convenient shell wrapper for python. UniversalWrapper now also supports asyn commands.
 
 Based on subprocess, the universal wrapper provides an intuitive wrapper around any cli.
 Tested on ubuntu only.
@@ -62,6 +62,24 @@ diff = git.diff(name_only=True)
 ```
 `True` and `False` flags are not forwarded to the cli. Instead `True` will add the flag only (without arguments) and `False` will remove the flag in case it is present elsewhere in the command. The latter can be useful is input overrides are used (see advanced usage). To avoid this behaviour, pass True or False as strings.
 
+## Example: Async pip install
+
+Install pip requirements asynchronously
+
+```python
+import asyncio
+from universalwrapper import pip
+
+pip.uw_settings.enable_async = True
+
+async def install_deps():
+    install = pip.install(requirement="requirements.txt")
+    # Do other stuff while waiting for the install
+    return await install
+
+loop = asyncio.new_event_loop()
+loop.run_until_complete(install_deps())
+
 ## Example: send a notification
 
 ```python
@@ -78,21 +96,22 @@ The argument `(root=True)` will trigger `sudo ` in the command.
 The universal wrapper does not have any functions build in that are made for one specific cli. If there are repetitive modifications to commands that need to be made, this can be done by editing the uw_settings:
 
 ```python
-from universalwrapper import lxc
+from universalwrapper import foo
 
-lxc.uw_settings
+foo.uw_settings
 >>
-lxc.uw_settings.cmd: str # base command
-lxc.uw_settings.divider: str = '-' # string to replace '_' with in command
-lxc.uw_settings.class_divider: str = ' ' # string to put between classes
-lxc.uw_settings.flag_divider: str = '-' # string to replace '_' with in flags
-lxc.uw_settings.debug: bool = False # if True, don't execute command but just print it
-lxc.uw_settings.input_add: dict: {str: int, str: int} = {} # {extra command, index where to add it}
-lxc.uw_settings.input_move: dict: {str: int, str: int} = {} # {extra command, index where to move it to}
-lxc.uw_settings.input_custom: list[str] # custom command: e.g. "command.reverse()"
-lxc.uw_settings.output_decode: bool = True, # Decode output to str
-lxc.uw_settings.output_splitlines: bool = False, # Split output lines into list
-lxc.uw_settings.output_yaml: bool = False, # Try to parse yaml from output
-lxc.uw_settings.output_json: bool = False, # Try to parse json from output
-lxc.uw_settings.output_custom: list[str] # custom command: e.g. "output.reverse()"
+foo.uw_settings.cmd: str # base command
+foo.uw_settings.divider: str = '-' # string to replace '_' with in command
+foo.uw_settings.class_divider: str = ' ' # string to put between classes
+foo.uw_settings.flag_divider: str = '-' # string to replace '_' with in flags
+foo.uw_settings.debug: bool = False # if True, don't execute command but just print it
+foo.uw_settings.input_add: dict: {str: int, str: int} = {} # {extra command, index where to add it}
+foo.uw_settings.input_move: dict: {str: int, str: int} = {} # {extra command, index where to move it to}
+foo.uw_settings.input_custom: list[str] # custom command: e.g. "command.reverse()"
+foo.uw_settings.output_decode: bool = True, # Decode output to str
+foo.uw_settings.output_splitlines: bool = False, # Split output lines into list
+foo.uw_settings.output_yaml: bool = False, # Try to parse yaml from output
+foo.uw_settings.output_json: bool = False, # Try to parse json from output
+foo.uw_settings.output_custom: list[str] # custom command: e.g. "output.reverse()"
+foo.uw_settings.enable_async: bool = False, # enable asyncio
 ```
