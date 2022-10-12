@@ -4,12 +4,13 @@
 # held responsible for any problems caused by the use of this script.
 
 import asyncio
-import subprocess
 import json
-import yaml
-import sys
-from copy import copy
 import shlex
+import subprocess
+import sys
+import yaml
+
+from copy import copy
 from typing import Union, List
 
 

@@ -79,6 +79,7 @@ async def install_deps():
 
 loop = asyncio.new_event_loop()
 loop.run_until_complete(install_deps())
+```
 
 ## Example: send a notification
 
