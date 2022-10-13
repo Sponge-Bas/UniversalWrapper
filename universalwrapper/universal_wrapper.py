@@ -1,17 +1,17 @@
 # Copyright 2022 by Bas de Bruijne
 # All rights reserved.
 # Universal Wrapper comes with ABSOLUTELY NO WARRANTY, the writer can not be
-# held responsible for any problems caused by the use of this script.
+# held responsible for any problems caused by the use of this module.
 
 import asyncio
 import json
+import logging
 import shlex
 import subprocess
-import sys
 import yaml
 
 from copy import copy
-from typing import Union, List
+from typing import Union, List, Dict
 
 
 class UWSettings:
@@ -19,21 +19,39 @@ class UWSettings:
 
     def __init__(self):
         """Loads default uw settings"""
-        self.cmd = ""
-        self.divider = "-"
-        self.class_divider = " "
-        self.flag_divider = "-"
-        self.input_add = {}
-        self.input_move = {}
-        self.input_custom = []
-        self.output_decode = True
-        self.output_yaml = False
-        self.output_json = False
-        self.output_splitlines = False
-        self.output_custom = []
-        self.debug = False
-        self.enable_async = False
-        self.__freeze = True
+        # Base command
+        self.cmd: str = ""
+        # String to replace "_" with in commands
+        self.divider: str = "-"
+        # String to place in between classes (instead of ".")
+        self.class_divider: str = " "
+        # String to replace "_" with in flags
+        self.flag_divider: str = "-"
+        # {extra command, index where to add it}
+        self.input_add: Dict[str:int] = {}
+        # {extra command, index where to move it to}
+        self.input_move: Dict[str:int] = {}
+        # custom command: e.g. "command.reverse()"
+        self.input_custom: List[str] = []
+        # Decode output to str
+        self.output_decode: bool = True
+        # Parse yaml from output
+        self.output_yaml: bool = False
+        # Parse json from output
+        self.output_json: bool = False
+        # Split lines of output
+        self.output_splitlines: bool = False
+        # custom command: e.g. "output.reverse()"
+        self.output_custom: List[str] = []
+        # Don't run commands but instead print the command
+        self.debug: bool = False
+        # Enable asyncio
+        self.enable_async: bool = False
+        # Use double instead of single dashes for multi-character flags
+        self.double_dash: bool = True
+
+        # Restrict new variable creation (used internally only)
+        self.__freeze: bool = True
 
     def __setattr__(self, key: str, value: object) -> None:
         """Prevents the creating of misspelled uw_settings
@@ -52,7 +70,7 @@ class UniversalWrapper:
         """Loads the default settings and changes the settings if requested
 
         :param cmd: Base command for the class
-        :uw_settings: Preconfigured UWSettings object
+        :uw_settings: Pre-configured UWSettings object
         :kwargs: {key: value} UWSettings to configure
         """
         if uw_settings:
@@ -73,19 +91,35 @@ class UniversalWrapper:
         :returns: Response of the shell call
         """
         command = self.uw_settings.cmd[:]
+        command = self._check_async(command)
         command.extend(self._generate_command(*args, **kwargs))
         command = self._input_modifier(command)
         if self._root:
             command = ["sudo"] + command
         cmd = shlex.split(" ".join(command))
         if self.uw_settings.debug:
-            print("Generated command:")
-            print(cmd)
+            print(f"Generated command:\n{cmd}")
             return
-        if not self.uw_settings.enable_async:
-            return self._run_cmd(cmd)
-        else:
+        logging.debug("Calling shell command '{cmd}'")
+        if self._enable_async:
             return self._async_run_cmd(cmd)
+        else:
+            return self._run_cmd(cmd)
+
+    def _check_async(self, command: List[str]) -> List[str]:
+        """Checks the command for the "async_" keyword
+
+        :param command: Initial command with possible "async_" keyword
+        :returns: command with keyword removed. Async enablement is stored in
+        self._enable_async
+        """
+        self._enable_async = self.uw_settings.enable_async
+        for i, cmd in enumerate(command):
+            if cmd.startswith(f"async{self.uw_settings.divider}"):
+                logging.debug("Async keyword found")
+                command[i] = cmd.replace(f"async{self.uw_settings.divider}", "")
+                self._enable_async = True
+        return command
 
     def _generate_command(
         self, *args: Union[int, str], **kwargs: Union[int, str]
@@ -124,7 +158,7 @@ class UniversalWrapper:
         :param flag: flag to add dashes to
         :returns: flag with dashes
         """
-        if len(str(flag)) > 1:
+        if len(str(flag)) > 1 and self.uw_settings.double_dash:
             return f"--{flag.replace('_', self.uw_settings.flag_divider)}"
         else:
             return f"-{flag}"
@@ -157,7 +191,8 @@ class UniversalWrapper:
 
         :param command: Initial command to add items to
         :param input_command: Item to add to command
-        :param index: Index to add command, must be in range(0, len(command)) or -1
+        :param index: Index to add command, must be in range(0, len(command))
+        or -1
         :returns: Modified command
         """
         if index == -1:
@@ -169,7 +204,7 @@ class UniversalWrapper:
         return command
 
     def _run_cmd(self, cmd: List[str]) -> str:
-        """Forwards the genetared command to subprocess and handles
+        """Forwards the generated command to subprocess and handles
         error displaying
 
         :param: List of string which combined make the shell command
@@ -183,7 +218,7 @@ class UniversalWrapper:
         return self._output_modifier(output)
 
     async def _async_run_cmd(self, cmd: List[str]) -> str:
-        """Forwards the genetared command to async subprocess and
+        """Forwards the generated command to async subprocess and
         handles error displaying
 
         :param: List of string which combined make the shell command
@@ -210,14 +245,14 @@ class UniversalWrapper:
             try:
                 output = yaml.safe_load(output)
             except Exception as e:
-                print("Parse yaml failed")
-                print(e)
+                logging.warning("Parse yaml failed")
+                logging.warning(e)
         if self.uw_settings.output_json:
             try:
                 output = json.loads(output)
             except Exception as e:
-                print("Parse json failed")
-                print(e)
+                logging.warning("Parse json failed")
+                logging.warning(e)
         if self.uw_settings.output_splitlines:
             output = output.splitlines()
         for cmd in self.uw_settings.output_custom:
@@ -231,12 +266,13 @@ class UniversalWrapper:
         :returns: universalwrapper class
         """
         subclass = UniversalWrapper(
-            f"{' '.join(self.uw_settings.cmd)}{self.uw_settings.class_divider}{attr.replace('_', self.uw_settings.divider)}",
+            f"{' '.join(self.uw_settings.cmd)}{self.uw_settings.class_divider}"
+            f"{attr.replace('_', self.uw_settings.divider)}",
             uw_settings=copy(self.uw_settings),
         )
         return subclass
 
 
 def __getattr__(attr):
-    """Redirects all trafic to UniversalWrapper"""
+    """Redirects all traffic to UniversalWrapper"""
     return UniversalWrapper(attr)
