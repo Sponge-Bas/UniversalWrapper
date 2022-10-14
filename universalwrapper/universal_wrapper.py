@@ -19,38 +19,22 @@ class UWSettings:
 
     def __init__(self):
         """Loads default uw settings"""
-        # Base command
-        self.cmd: str = ""
-        # String to replace "_" with in commands
-        self.divider: str = "-"
-        # String to place in between classes (instead of ".")
-        self.class_divider: str = " "
-        # String to replace "_" with in flags
-        self.flag_divider: str = "-"
-        # {extra command, index where to add it}
-        self.input_add: Dict[str:int] = {}
-        # {extra command, index where to move it to}
-        self.input_move: Dict[str:int] = {}
-        # custom command: e.g. "command.reverse()"
-        self.input_custom: List[str] = []
-        # Decode output to str
-        self.output_decode: bool = True
-        # Parse yaml from output
-        self.output_yaml: bool = False
-        # Parse json from output
-        self.output_json: bool = False
-        # Split lines of output
-        self.output_splitlines: bool = False
-        # custom command: e.g. "output.reverse()"
-        self.output_custom: List[str] = []
-        # Don't run commands but instead print the command
-        self.debug: bool = False
-        # Enable asyncio
-        self.enable_async: bool = False
-        # Use double instead of single dashes for multi-character flags
-        self.double_dash: bool = True
+        self.cmd: str = ""  # Base command
+        self.divider: str = "-"  # String to replace "_" with in commands
+        self.class_divider: str = " "  # String to place in between classes
+        self.flag_divider: str = "-"  # String to replace "_" with in flags
+        self.input_add: Dict[str:int] = {}  # {extra command, index where to add it}
+        self.input_move: Dict[str:int] = {}  # {extra command, index where to move it}
+        self.input_custom: List[str] = []  # custom command: e.g. "command.reverse()"
+        self.output_decode: bool = True  # Decode output to str
+        self.output_yaml: bool = False  # Parse yaml from output
+        self.output_json: bool = False  # Parse json from output
+        self.output_splitlines: bool = False  # Split lines of output
+        self.output_custom: List[str] = []  # custom command: e.g. "output.reverse()"
+        self.debug: bool = False  # Don't run commands but instead print the command
+        self.enable_async: bool = False  # Globally enable asyncio
+        self.double_dash: bool = True  # Use -- instead of - for multi-character flags
 
-        # Restrict new variable creation (used internally only)
         self.__freeze: bool = True
 
     def __setattr__(self, key: str, value: object) -> None:

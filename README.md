@@ -64,16 +64,16 @@ diff = git.diff(name_only=True)
 
 ## Example: Async pip install
 
+Async is enabled locally when a command stars with `async_`. To enable async globally, use `command.uw_settings.async = True`.
+
 Install pip requirements asynchronously
 
 ```python
 import asyncio
 from universalwrapper import pip
 
-pip.uw_settings.enable_async = True
-
 async def install_deps():
-    install = pip.install(requirement="requirements.txt")
+    install = pip.async_install(requirement="requirements.txt")
     # Do other stuff while waiting for the install
     return await install
 
