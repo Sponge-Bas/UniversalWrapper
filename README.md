@@ -1,7 +1,6 @@
 # UniversalWrapper
-UniversalWrapper is a convenient shell wrapper for python. UniversalWrapper now also supports asyn commands.
+UniversalWrapper is a convenient shell wrapper for python, allowing you to interact with command line interfaces as if they were Python modules. UniversalWrapper now also supports async commands since version 2.0.
 
-Based on subprocess, the universal wrapper provides an intuitive wrapper around any cli.
 Tested on ubuntu only.
 
 # Getting started
@@ -11,13 +10,16 @@ pip install UniversalWrapper
 ```
 
 # Usage
-UniversalWrapper uses a set of simple rules to convert python commands to bash commands:
-```python
-from universalwrapper import uw_example
-uw_example.run.command("foo", bar="bar", b="foo", foo_bar=True)
-# calls $ uw-example run command foo --bar bar -b foo --foo-bar
+Imagine you want to call
+```bash
+$ ls /home --recursive
 ```
-The default conversion rules are:
+from python. Rather than using `subprocess.check_output`, you can just
+```python
+from universalwrapper import ls
+ls("/home", recursive=True)
+```
+UniversalWrapper uses a set of simple rules to convert python commands to bash commands. The default conversion rules are:
  - "_" is changed to "-" (see `uw_settings.divider` and `uw_settings.flag_divider`)
  - between classes (the .) a space is added (see `uw_settings.class_divider`)
  - A argument is converted to a string
@@ -64,7 +66,7 @@ diff = git.diff(name_only=True)
 
 ## Example: Async pip install
 
-Async is enabled locally when a command stars with `async_`. To enable async globally, use `command.uw_settings.async = True`.
+Async is enabled locally if a command stars with `async_`. To enable async globally, use `command.uw_settings.async = True`.
 
 Install pip requirements asynchronously
 
@@ -73,12 +75,11 @@ import asyncio
 from universalwrapper import pip
 
 async def install_deps():
-    install = pip.async_install(requirement="requirements.txt")
+    install = await pip.async_install(requirement="requirements.txt")
     # Do other stuff while waiting for the install
     return await install
 
-loop = asyncio.new_event_loop()
-loop.run_until_complete(install_deps())
+asyncio.run(install_deps())
 ```
 
 ## Example: send a notification
@@ -116,3 +117,17 @@ foo.uw_settings.output_json: bool = False, # Try to parse json from output
 foo.uw_settings.output_custom: list[str] # custom command: e.g. "output.reverse()"
 foo.uw_settings.enable_async: bool = False, # enable asyncio
 ```
+
+# Limitations
+
+Not all commands can be called cleanly with UniversalWrapper, for example:
+```bash
+example --log-level Debug command --flag value separate_value
+```
+Can only be called with
+```python
+from uw import example
+example("--log-level", "Debug", "command", "--flag", "value", "separate_value")
+```
+due to the limitation in python that keywords arguments must come after non-keyword arguments.
+UniversalWrapper V3 may contain workarounds for this.

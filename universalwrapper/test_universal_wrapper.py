@@ -53,7 +53,7 @@ class TestUniversalWrapper(unittest.TestCase):
         )
         uw_test.a.b.c.d.e.f.g.h.i.j.k.l.m()
         mock_check_output.assert_called_with(
-            ['uw-test', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm']
+            ["uw-test", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m"]
         )
         uw_test.uw_settings.double_dash = False
         uw_test.run("a", bar=["foo", "bar"])
@@ -205,44 +205,45 @@ class TestUniversalWrapper(unittest.TestCase):
         uw_test = UniversalWrapper("uw_test", divider=" ")
         self.assertEqual(uw_test.uw_settings.divider, " ")
 
+    def test_async(self):
+        asyncio.run(self._test_async())
+
     @patch("universal_wrapper.asyncio.create_subprocess_exec")
-    def test_async(self, mock_cse):
+    async def _test_async(self, mock_cse):
         proc = AsyncMock()
         proc.returncode = 0
         proc.communicate.return_value = (b"output", b"")
         mock_cse.return_value = proc
 
-        loop = asyncio.new_event_loop()
         uw_test = UniversalWrapper("uw_test")
-        loop.run_until_complete(uw_test.async_test())
-
+        output = await uw_test.async_test()
+        await output
         mock_cse.assert_called_with("uw-test", "test", stdout=ANY, stderr=ANY)
 
         uw_test = UniversalWrapper("uw_test")
         uw_test.uw_settings.enable_async = True
-        loop.run_until_complete(uw_test.async_test2())
-
+        output = await uw_test.async_test2()
+        await output
         mock_cse.assert_called_with("uw-test", "test2", stdout=ANY, stderr=ANY)
 
         uw_test = UniversalWrapper("uw_test")
         uw_test.uw_settings.enable_async = True
-        loop.run_until_complete(uw_test.test3())
-
+        output = await uw_test.test3()
+        await output
         mock_cse.assert_called_with("uw-test", "test3", stdout=ANY, stderr=ANY)
 
         uw_test = UniversalWrapper("uw_test")
         uw_test.uw_settings.enable_async = True
-        loop.run_until_complete(uw_test.async_a.b.async_c())
-
+        output = await uw_test.async_a.b.async_c()
+        await output
         mock_cse.assert_called_with("uw-test", "a", "b", "c", stdout=ANY, stderr=ANY)
 
         proc.returncode = 1
         with self.assertRaises(
             subprocess.CalledProcessError,
         ):
-            loop.run_until_complete(uw_test.async_a.b.async_c())
-
-        loop.close()
+            output = await uw_test.async_a.b.async_c()
+            await output
 
 
 if __name__ == "__main__":

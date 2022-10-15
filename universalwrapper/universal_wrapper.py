@@ -211,11 +211,15 @@ class UniversalWrapper:
         proc = await asyncio.create_subprocess_exec(
             *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
-        stdout, stderr = await proc.communicate()
-        if proc.returncode != 0:
+
+        async def _output(proc):
+            stdout, stderr = await proc.communicate()
+            if proc.returncode == 0:
+                return self._output_modifier(stdout)
             print(stderr.decode())
             raise subprocess.CalledProcessError(proc.returncode, cmd, stdout, stderr)
-        return self._output_modifier(stdout)
+
+        return _output(proc)
 
     def _output_modifier(self, output: str) -> str:
         """Modifies the subprocess' output according to uw_settings
