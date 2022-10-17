@@ -27,15 +27,8 @@ UniversalWrapper uses a set of simple rules to convert python commands to bash c
    if `arg=False` the flag is removed if it is present in `uw_settings.input_add`
  - Keyword arguments with list repeat the flag: `foo=['bar', 'bar']` calls `--foo bar --foo bar`
 
-If you don't want to import every single command, use:
-```python
-import universalwrapper as uw
-
-uw.example("foo", "bar")
-# calls $ example foo bar
-```
-
 Repetitive commands or output modifications can be set `uw_settings`, see advanced usage.
+
 # Examples
 ## Example: create and delete lxd containers
 
@@ -62,6 +55,12 @@ check git diff files:
 diff = git.diff(name_only=True)
 # calls $ git diff --name-only
 ```
+
+Commands can be chained as well (see `uw_settings.class_divider`):
+```python
+git.remote.rename("origin", "foo")
+```
+
 `True` and `False` flags are not forwarded to the cli. Instead `True` will add the flag only (without arguments) and `False` will remove the flag in case it is present elsewhere in the command. The latter can be useful is input overrides are used (see advanced usage). To avoid this behaviour, pass True or False as strings.
 
 ## Example: Async pip install
@@ -131,3 +130,4 @@ example("--log-level", "Debug", "command", "--flag", "value", "separate_value")
 ```
 due to the limitation in python that keywords arguments must come after non-keyword arguments.
 UniversalWrapper V3 may contain workarounds for this.
+
