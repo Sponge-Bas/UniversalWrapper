@@ -64,6 +64,7 @@ class UniversalWrapper:
             for key, value in kwargs.items():
                 setattr(self.uw_settings, key, value)
         self.uw_settings.cmd = cmd.replace("_", self.uw_settings.divider).split(" ")
+        self._cmd = copy(self.uw_settings.cmd)
         self._flags_to_remove = []
 
     def __call__(self, *args: Union[int, str], **kwargs: Union[int, str]) -> str:
@@ -74,7 +75,8 @@ class UniversalWrapper:
         either be `key = value` for `--key value` or `key = True` for `--key`
         :returns: Response of the shell call
         """
-        command = self.uw_settings.cmd[:]
+        command = self._cmd[:]
+        self._cmd = copy(self.uw_settings.cmd)
         command = self._check_async(command)
         command.extend(self._generate_command(*args, **kwargs))
         command = self._input_modifier(command)
@@ -253,12 +255,15 @@ class UniversalWrapper:
         :param attr: next section of command to construct
         :returns: universalwrapper class
         """
-        subclass = UniversalWrapper(
-            f"{' '.join(self.uw_settings.cmd)}{self.uw_settings.class_divider}"
-            f"{attr.replace('_', self.uw_settings.divider)}",
-            uw_settings=copy(self.uw_settings),
+        self._cmd = (
+            (
+                f"{' '.join(self._cmd)}{self.uw_settings.class_divider}"
+                f"{attr.replace('_', self.uw_settings.divider)}"
+            )
+            .replace("_", self.uw_settings.divider)
+            .split(" ")
         )
-        return subclass
+        return self
 
 
 def __getattr__(attr):
