@@ -12,16 +12,15 @@
 import asyncio
 import subprocess
 import unittest
-import universal_wrapper
+import universalwrapper
 
 from mock import patch, AsyncMock, ANY
-from universal_wrapper import UniversalWrapper
 
 
 class TestUniversalWrapper(unittest.TestCase):
-    @patch("universal_wrapper.subprocess.check_output")
+    @patch("universalwrapper.subprocess.check_output")
     def test_basic_cases(self, mock_check_output):
-        uw_test = UniversalWrapper("uw_test")
+        uw_test = universalwrapper.uw_test
 
         uw_test("a")
         mock_check_output.assert_called_with(["uw-test", "a"])
@@ -61,9 +60,9 @@ class TestUniversalWrapper(unittest.TestCase):
             ["uw-test", "run", "a", "-bar", "foo", "-bar", "bar"]
         )
 
-    @patch("universal_wrapper.subprocess.check_output")
+    @patch("universalwrapper.subprocess.check_output")
     def test_input_add(self, mock_check_output):
-        uw_test = UniversalWrapper("uw_test")
+        uw_test = universalwrapper.uw_test
         uw_test.uw_settings.input_add = {"bar": -1}
         uw_test.run.runs("a", "b")
         mock_check_output.assert_called_with(
@@ -109,9 +108,9 @@ class TestUniversalWrapper(unittest.TestCase):
         uw_test.run(bar=[False, "bar"])
         mock_check_output.assert_called_with(["uw-test", "run", "--bar", "bar"])
 
-    @patch("universal_wrapper.subprocess.check_output")
+    @patch("universalwrapper.subprocess.check_output")
     def test_input_move(self, mock_check_output):
-        uw_test = UniversalWrapper("uw_test")
+        uw_test = universalwrapper.uw_test
         uw_test.uw_settings.input_move = {"runs": 0}
         uw_test.run.runs("a", "b")
         mock_check_output.assert_called_with(["runs", "uw-test", "run", "a", "b"])
@@ -129,25 +128,27 @@ class TestUniversalWrapper(unittest.TestCase):
         uw_test.run.runs("a", "b")
         mock_check_output.assert_called_with(["b", "a", "runs", "run", "uw-test"])
 
-        universal_wrapper.run_command("a")
+        universalwrapper.run_command("a")
         mock_check_output.assert_called_with(["run-command", "a"])
 
-    @patch("universal_wrapper.subprocess.check_output")
+    @patch("universalwrapper.subprocess.check_output")
     def test_dividers(self, mock_check_output):
-        uw_test = UniversalWrapper(
-            "uw_test", class_divider="~", divider=" ", flag_divider="bar"
-        )
+        uw_test = universalwrapper.uw_test
+        uw_test.uw_settings.class_divider = "~"
+        uw_test.uw_settings.divider = " "
+        uw_test.uw_settings.flag_divider = "bar"
         uw_test.run.runs("a", "b", bar_foo=True)
         mock_check_output.assert_called_with(
             ["uw", "test~run~runs", "a", "b", "--barbarfoo"]
         )
 
-    @patch("universal_wrapper.print")
-    @patch("universal_wrapper.subprocess.check_output")
+    @patch("universalwrapper.print")
+    @patch("universalwrapper.subprocess.check_output")
     def test_debug(self, mock_check_output, mock_print):
-        uw_test = UniversalWrapper(
-            "uw_test", class_divider="~", divider=" ", flag_divider="bar"
-        )
+        uw_test = universalwrapper.uw_test
+        uw_test.uw_settings.class_divider = "~"
+        uw_test.uw_settings.divider = " "
+        uw_test.uw_settings.flag_divider = "bar"
         uw_test.uw_settings.debug = True
         uw_test.run.runs("a", "b", bar_foo=True)
         mock_check_output.assert_not_called()
@@ -156,7 +157,7 @@ class TestUniversalWrapper(unittest.TestCase):
         )
 
     def test_change_settings(self):
-        uw_test = UniversalWrapper("uw_test")
+        uw_test = universalwrapper.uw_test
         uw_test.uw_settings.debug = True
         with self.assertRaises(Exception) as context:
             uw_test.uw_settings.non_existant_setting = True
@@ -164,16 +165,18 @@ class TestUniversalWrapper(unittest.TestCase):
         self.assertTrue("Valid settings are limited to" in str(context.exception))
 
     def test_set_settings(self):
-        uw_test = UniversalWrapper("uw_test", divider="foo")
+        uw_test = universalwrapper.uw_test
+        uw_test.uw_settings.divider = "foo"
         self.assertEqual(uw_test.uw_settings.divider, "foo")
         with self.assertRaises(Exception) as context:
-            uw_test = UniversalWrapper("uw_test", bar="foo")
+            uw_test = universalwrapper.uw_test
+            uw_test.uw_settings.bar = "foo"
 
         self.assertTrue("Valid settings are limited to" in str(context.exception))
 
-    @patch("universal_wrapper.subprocess.check_output")
+    @patch("universalwrapper.subprocess.check_output")
     def test_parse_yaml(self, mock_check_output):
-        uw_test = UniversalWrapper("uw_test")
+        uw_test = universalwrapper.uw_test
         uw_test.uw_settings.output_decode = False
         uw_test.uw_settings.output_yaml = True
         mock_check_output.return_value = """\
@@ -183,18 +186,18 @@ class TestUniversalWrapper(unittest.TestCase):
         result = uw_test()
         self.assertEqual(result, [{"foo": "bar", "config": {"bar": "foo"}}])
 
-    @patch("universal_wrapper.subprocess.check_output")
+    @patch("universalwrapper.subprocess.check_output")
     def test_parse_json(self, mock_check_output):
-        uw_test = UniversalWrapper("uw_test")
+        uw_test = universalwrapper.uw_test
         uw_test.uw_settings.output_decode = False
         uw_test.uw_settings.output_json = True
         mock_check_output.return_value = '{"foo": "bar", "config": {"bar": "foo"}}'
         result = uw_test()
         self.assertEqual(result, {"foo": "bar", "config": {"bar": "foo"}})
 
-    @patch("universal_wrapper.subprocess.check_output")
+    @patch("universalwrapper.subprocess.check_output")
     def test_parse_json(self, mock_check_output):
-        uw_test = UniversalWrapper("uw_test")
+        uw_test = universalwrapper.uw_test
         uw_test.uw_settings.output_decode = False
         uw_test.uw_settings.output_splitlines = True
         mock_check_output.return_value = "a\nb\nc"
@@ -202,37 +205,38 @@ class TestUniversalWrapper(unittest.TestCase):
         self.assertEqual(result, ["a", "b", "c"])
 
     def test_load_settings(self):
-        uw_test = UniversalWrapper("uw_test", divider=" ")
+        uw_test = universalwrapper.uw_test
+        uw_test.uw_settings.divider = " "
         self.assertEqual(uw_test.uw_settings.divider, " ")
 
     def test_async(self):
         asyncio.run(self._test_async())
 
-    @patch("universal_wrapper.asyncio.create_subprocess_exec")
+    @patch("universalwrapper.asyncio.create_subprocess_exec")
     async def _test_async(self, mock_cse):
         proc = AsyncMock()
         proc.returncode = 0
         proc.communicate.return_value = (b"output", b"")
         mock_cse.return_value = proc
 
-        uw_test = UniversalWrapper("uw_test")
+        uw_test = universalwrapper.uw_test
         output = await uw_test.async_test()
         await output
         mock_cse.assert_called_with("uw-test", "test", stdout=ANY, stderr=ANY)
 
-        uw_test = UniversalWrapper("uw_test")
+        uw_test = universalwrapper.uw_test
         uw_test.uw_settings.enable_async = True
         output = await uw_test.async_test2()
         await output
         mock_cse.assert_called_with("uw-test", "test2", stdout=ANY, stderr=ANY)
 
-        uw_test = UniversalWrapper("uw_test")
+        uw_test = universalwrapper.uw_test
         uw_test.uw_settings.enable_async = True
         output = await uw_test.test3()
         await output
         mock_cse.assert_called_with("uw-test", "test3", stdout=ANY, stderr=ANY)
 
-        uw_test = UniversalWrapper("uw_test")
+        uw_test = universalwrapper.uw_test
         uw_test.uw_settings.enable_async = True
         output = await uw_test.async_a.b.async_c()
         await output

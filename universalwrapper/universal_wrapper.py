@@ -17,7 +17,7 @@ from typing import Union, List, Dict
 class UWSettings:
     __freeze = False
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Loads default uw settings"""
         self.cmd: str = ""  # Base command
         self.divider: str = "-"  # String to replace "_" with in commands
@@ -35,6 +35,7 @@ class UWSettings:
         self.enable_async: bool = False  # Globally enable asyncio
         self.double_dash: bool = True  # Use -- instead of - for multi-character flags
 
+        self.cmd_chain: List[str] = []
         self.__freeze: bool = True
 
     def __setattr__(self, key: str, value: object) -> None:
@@ -46,7 +47,34 @@ class UWSettings:
         if self.__freeze and not hasattr(self, key):
             functions = [item for item in dir(self) if not item.startswith("_")]
             raise ImportError(f"Valid settings are limited to {functions}")
+        if key == "divider" and hasattr(self, key):
+            self._reset_command(value)
         object.__setattr__(self, key, value)
+
+    def _reset_command(self, divider: str = None) -> None:
+        """Resets cmd_chain to its original value
+
+        When a command is chained, its chain history is stored in cmd_chain. After that
+        command has been called the chain needs to be reset to the original command.
+        :param divider: The new divider, only applicable if the divider has changed
+        """
+        if divider:
+            self.cmd = self.cmd.replace(self.divider, divider)
+        self.cmd_chain = self.cmd.split(" ")
+
+    def _update_command(self, value: str) -> None:
+        """Add new value to the cmd_chain
+
+        :param value: value to add to the cmd_chain
+        """
+        self.cmd_chain = (
+            (
+                f"{' '.join(self.cmd_chain)}{self.class_divider}"
+                f"{value.replace('_', self.divider)}"
+            )
+            .replace("_", self.divider)
+            .split(" ")
+        )
 
 
 class UniversalWrapper:
@@ -63,8 +91,8 @@ class UniversalWrapper:
             self.uw_settings = UWSettings()
             for key, value in kwargs.items():
                 setattr(self.uw_settings, key, value)
-        self.uw_settings.cmd = cmd.replace("_", self.uw_settings.divider).split(" ")
-        self._cmd = copy(self.uw_settings.cmd)
+        self.uw_settings.cmd = cmd.replace("_", self.uw_settings.divider)
+        self.uw_settings._reset_command()
         self._flags_to_remove = []
 
     def __call__(self, *args: Union[int, str], **kwargs: Union[int, str]) -> str:
@@ -75,8 +103,8 @@ class UniversalWrapper:
         either be `key = value` for `--key value` or `key = True` for `--key`
         :returns: Response of the shell call
         """
-        command = self._cmd[:]
-        self._cmd = copy(self.uw_settings.cmd)
+        command = self.uw_settings.cmd_chain[:]
+        self.uw_settings._reset_command()
         command = self._check_async(command)
         command.extend(self._generate_command(*args, **kwargs))
         command = self._input_modifier(command)
@@ -255,14 +283,7 @@ class UniversalWrapper:
         :param attr: next section of command to construct
         :returns: universalwrapper class
         """
-        self._cmd = (
-            (
-                f"{' '.join(self._cmd)}{self.uw_settings.class_divider}"
-                f"{attr.replace('_', self.uw_settings.divider)}"
-            )
-            .replace("_", self.uw_settings.divider)
-            .split(" ")
-        )
+        self.uw_settings._update_command(attr)
         return self
 
 

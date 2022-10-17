@@ -30,6 +30,11 @@ UniversalWrapper uses a set of simple rules to convert python commands to bash c
 Repetitive commands or output modifications can be set `uw_settings`, see advanced usage.
 
 # Examples
+
+Below are some examples on how to use UniversalWrapper. Keep in mind, UniversalWrapper has no code specific to any particular command and the use of UniversalWrapper is in no way limited to the commands below.
+
+If you are testing UniversalWrapper and prefer to not run the commands before you are familiar with the conversion rules, set `uw_settings.debug == True` and UniversalWrapper will print the command instead of executing it.
+
 ## Example: create and delete lxd containers
 
 ```python
@@ -65,7 +70,7 @@ git.remote.rename("origin", "foo")
 
 ## Example: Async pip install
 
-Async is enabled locally if a command stars with `async_`. To enable async globally, use `command.uw_settings.async = True`.
+Async is enabled locally if a command stars with `async_`. To enable async globally, use `uw_settings.async = True`.
 
 Install pip requirements asynchronously
 
