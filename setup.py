@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'UniversalWrapper',
   packages = ['universalwrapper', 'uw'],
-  version = '2.0',
+  version = '2.1',
   license='MIT',
   long_description="Visit https://github.com/Basdbruijne/UniversalWrapper",
   author = 'Bas de Bruijne',
@@ -14,7 +14,7 @@ setup(
     #   3 - Alpha
     #   4 - Beta
     #   5 - Production/ Stable
-    'Development Status :: 5 - Stable',
+    'Development Status :: 4 - Beta',
 
     # Indicate who your project is intended for
     'Intended Audience :: Developers',
@@ -30,5 +30,6 @@ setup(
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
   ],
 )

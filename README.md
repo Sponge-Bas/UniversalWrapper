@@ -70,7 +70,7 @@ git.remote.rename("origin", "foo")
 
 ## Example: Async pip install
 
-Async is enabled locally if a command stars with `async_`. To enable async globally, use `uw_settings.async = True`.
+Async is enabled locally by the keyword `(_enable_async = True)`. To enable async globally, use `uw_settings.enable_async = True`.
 
 Install pip requirements asynchronously
 
@@ -79,7 +79,7 @@ import asyncio
 from universalwrapper import pip
 
 async def install_deps():
-    install = await pip.async_install(requirement="requirements.txt")
+    install = await pip.install(requirement="requirements.txt", _enable_async = True)
     # Do other stuff while waiting for the install
     return await install
 
@@ -95,31 +95,60 @@ notify_send("title", "subtitle", i="face-wink")
 # calls $ notify-sed title subtitle -i face-wink
 ```
 
-The argument `(root=True)` will trigger `sudo ` in the command.
+The argument `(_root=True)` will trigger `sudo ` in the command.
 
 # Advanced usage
 
-The universal wrapper does not have any functions build in that are made for one specific cli. If there are repetitive modifications to commands that need to be made, this can be done by editing the uw_settings:
+The universal wrapper does not have any functions build in that are made for one specific cli. If there are repetitive modifications to commands that need to be made, this can be done by editing the uw_settings.
+Some settings are global and some can also be used locally:
 
 ```python
 from universalwrapper import foo
 
 foo.uw_settings
 >>
-foo.uw_settings.cmd: str # base command
-foo.uw_settings.divider: str = '-' # string to replace '_' with in command
-foo.uw_settings.class_divider: str = ' ' # string to put between classes
-foo.uw_settings.flag_divider: str = '-' # string to replace '_' with in flags
-foo.uw_settings.debug: bool = False # if True, don't execute command but just print it
-foo.uw_settings.input_add: dict: {str: int, str: int} = {} # {extra command, index where to add it}
-foo.uw_settings.input_move: dict: {str: int, str: int} = {} # {extra command, index where to move it to}
-foo.uw_settings.input_custom: list[str] # custom command: e.g. "command.reverse()"
-foo.uw_settings.output_decode: bool = True, # Decode output to str
-foo.uw_settings.output_splitlines: bool = False, # Split output lines into list
-foo.uw_settings.output_yaml: bool = False, # Try to parse yaml from output
-foo.uw_settings.output_json: bool = False, # Try to parse json from output
-foo.uw_settings.output_custom: list[str] # custom command: e.g. "output.reverse()"
-foo.uw_settings.enable_async: bool = False, # enable asyncio
+# Global settings
+cmd: str = ""  # Base command
+divider: str = "-"  # String to replace "_" with in commands
+class_divider: str = " "  # String to place in between classes
+flag_divider: str = "-"  # String to replace "_" with in flags
+input_add: Dict[str:int] = {}  # {extra command, index where to add it}
+input_move: Dict[str:int] = {}  # {extra command, index where to move it}
+input_custom: List[str] = []  # custom command: e.g. "command.reverse()"
+output_custom: List[str] = []  # custom command: e.g. "output.reverse()"
+
+# Local or global settings
+root: bool = False  # Run commands as sudo, same as `input_add={0: "sudo"}`
+debug: bool = False  # Don't run commands but instead print the command
+double_dash: bool = True  # Use -- instead of - for multi-character flags
+output_yaml: bool = False  # Parse yaml from output
+output_json: bool = False  # Parse json from output
+enable_async: bool = False  # Globally enable asyncio
+return_stderr: bool = False # Forward stderr output to the return values
+output_splitlines: bool = False  # Split lines of output
+output_decode: bool = True  # Decode output to str
+warn_stderr: bool = True # Forward stderr output to warnings
+cwd: str = None  # Current working directory
+env: str = None  # Env for environment variables
+```
+
+To use a global setting, assign the desired variable to `uw_settings`:
+```python3
+from universalwrapper import foo
+
+foo.uw_settings.class_divider = "."
+foo.uw_settings.enable_async = True
+
+...
+```
+
+To use a local setting, use it as a keyword argument with a leading underscore:
+```python3
+from universalwrapper import foo
+
+foo.bar(_output_yaml_ = True)
+
+...
 ```
 
 # Limitations
@@ -136,3 +165,4 @@ example("--log-level", "Debug", "command", "--flag", "value", "separate_value")
 due to the limitation in python that keywords arguments must come after non-keyword arguments.
 UniversalWrapper V3 may contain workarounds for this.
 
+UniversalWrapper is in Beta and may be subjected to changes. 

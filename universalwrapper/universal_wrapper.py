@@ -5,20 +5,26 @@
 
 import asyncio
 import json
-import logging
 import shlex
 import subprocess
 import yaml
+import warnings
 
-from copy import copy
-from typing import Union, List, Dict
+from typing import ByteString, Union, List, Dict, Any
 
 
 class UWSettings:
-    __freeze = False
+    """This class provides variable tracking for the UniversalWrapper class. These
+    variables define the behavior in which the wrapper converts calls to subprocess
+    commands.
+    """
+
+    _freeze = False
 
     def __init__(self) -> None:
         """Loads default uw settings"""
+
+        # Global settings
         self.cmd: str = ""  # Base command
         self.divider: str = "-"  # String to replace "_" with in commands
         self.class_divider: str = " "  # String to place in between classes
@@ -26,17 +32,25 @@ class UWSettings:
         self.input_add: Dict[str:int] = {}  # {extra command, index where to add it}
         self.input_move: Dict[str:int] = {}  # {extra command, index where to move it}
         self.input_custom: List[str] = []  # custom command: e.g. "command.reverse()"
-        self.output_decode: bool = True  # Decode output to str
+        self.output_custom: List[str] = []  # custom command: e.g. "output.reverse()"
+
+        self._incidentals = []
+        # Local or global settings
+        self.root: bool = False  # Run commands as sudo, same as `input_add={0: "sudo"}`
+        self.debug: bool = False  # Don't run commands but instead print the command
+        self.double_dash: bool = True  # Use -- instead of - for multi-character flags
         self.output_yaml: bool = False  # Parse yaml from output
         self.output_json: bool = False  # Parse json from output
-        self.output_splitlines: bool = False  # Split lines of output
-        self.output_custom: List[str] = []  # custom command: e.g. "output.reverse()"
-        self.debug: bool = False  # Don't run commands but instead print the command
         self.enable_async: bool = False  # Globally enable asyncio
-        self.double_dash: bool = True  # Use -- instead of - for multi-character flags
+        self.return_stderr: bool = False  # Forward stderr output to the return values
+        self.output_splitlines: bool = False  # Split lines of output
+        self.output_decode: bool = True  # Decode output to str
+        self.warn_stderr: bool = True  # Forward stderr output to warnings
+        self.cwd: str = None  # Current working directory
+        self.env: str = None  # Env for environment variables
 
-        self.cmd_chain: List[str] = []
-        self.__freeze: bool = True
+        self._cmd_chain: List[str] = []
+        self._freeze: bool = True
 
     def __setattr__(self, key: str, value: object) -> None:
         """Prevents the creating of misspelled uw_settings
@@ -44,9 +58,15 @@ class UWSettings:
         :param key: uw_settings key to change
         :param value: value to change key to
         """
-        if self.__freeze and not hasattr(self, key):
+        if self._freeze and not hasattr(self, key):
             functions = [item for item in dir(self) if not item.startswith("_")]
             raise ImportError(f"Valid settings are limited to {functions}")
+        if (
+            not self._freeze
+            and hasattr(self, "_incidentals")
+            and not key.startswith("_")
+        ):
+            self._incidentals.append(key)
         if key == "divider" and hasattr(self, key):
             self._reset_command(value)
         object.__setattr__(self, key, value)
@@ -60,24 +80,64 @@ class UWSettings:
         """
         if divider:
             self.cmd = self.cmd.replace(self.divider, divider)
-        self.cmd_chain = self.cmd.split(" ")
+        self._freeze = False
+        self._cmd_chain = self.cmd.split(" ")
+        self._freeze = True
 
     def _update_command(self, value: str) -> None:
         """Add new value to the cmd_chain
 
         :param value: value to add to the cmd_chain
         """
-        self.cmd_chain = (
+        self._freeze = False
+        self._cmd_chain = (
             (
-                f"{' '.join(self.cmd_chain)}{self.class_divider}"
+                f"{' '.join(self._cmd_chain)}{self.class_divider}"
                 f"{value.replace('_', self.divider)}"
             )
             .replace("_", self.divider)
             .split(" ")
         )
+        self._freeze = True
+
+
+class SubprocessError(subprocess.CalledProcessError):
+    """Error class derived from subprocess.CalledProcessError to make the error message
+    more intuitive by including the commands output
+    """
+
+    def __str__(self) -> str:
+        """Compiles variables from self to a coherent error message
+
+        :returns: Error message
+        """
+        msg = f"{super().__str__()[:-1]}:\n"
+        for err in ("stdout", "stderr"):
+            std = getattr(self, err)
+            if std:
+                std = std.decode().strip().replace("\n", "\n| ")
+                msg += f"{err}:\n| {std}\n"
+        return msg
 
 
 class UniversalWrapper:
+    """UniversalWrapper is a convenient shell wrapper for python, allowing you to
+    interact with command line interfaces as if they were Python modules.
+    UniversalWrapper has no code specific to any particular command and the use of
+    UniversalWrapper is in no way limited to the commands below.
+
+    Example usage:
+      ```
+      from universalwrapper import git
+
+      git.clone("https://github.com/Basdbruijne/UniversalWrapper.git")
+      diff = git.diff(name_only=True)
+      ```
+
+    To adjust the behavior of the wrapper, the uw_settings attribute of the wrapper can
+    be adjusted according to the rules defined under `class UwSettings`.
+    """
+
     def __init__(self, cmd: str, uw_settings: UWSettings = None, **kwargs) -> None:
         """Loads the default settings and changes the settings if requested
 
@@ -103,37 +163,22 @@ class UniversalWrapper:
         either be `key = value` for `--key value` or `key = True` for `--key`
         :returns: Response of the shell call
         """
-        command = self.uw_settings.cmd_chain[:]
+        command = self.uw_settings._cmd_chain[:]
         self.uw_settings._reset_command()
-        command = self._check_async(command)
+        for key in self.uw_settings._incidentals:
+            setattr(self, f"_{key}", getattr(self.uw_settings, key))
         command.extend(self._generate_command(*args, **kwargs))
         command = self._input_modifier(command)
         if self._root:
             command = ["sudo"] + command
-        cmd = shlex.split(" ".join(command))
-        if self.uw_settings.debug:
+        cmd = shlex.split(" ".join(command), posix=False)
+        if self._debug:
             print(f"Generated command:\n{cmd}")
             return
-        logging.debug("Calling shell command '{cmd}'")
         if self._enable_async:
             return self._async_run_cmd(cmd)
         else:
             return self._run_cmd(cmd)
-
-    def _check_async(self, command: List[str]) -> List[str]:
-        """Checks the command for the "async_" keyword
-
-        :param command: Initial command with possible "async_" keyword
-        :returns: command with keyword removed. Async enablement is stored in
-        self._enable_async
-        """
-        self._enable_async = self.uw_settings.enable_async
-        for i, cmd in enumerate(command):
-            if cmd.startswith(f"async{self.uw_settings.divider}"):
-                logging.debug("Async keyword found")
-                command[i] = cmd.replace(f"async{self.uw_settings.divider}", "")
-                self._enable_async = True
-        return command
 
     def _generate_command(
         self, *args: Union[int, str], **kwargs: Union[int, str]
@@ -151,8 +196,8 @@ class UniversalWrapper:
                 string = f"'{string}'"
             command.append(str(string))
         for key, values in kwargs.items():
-            if key == "root" and values is True:
-                self._root = True
+            if key.startswith("_") and key[1:] in self.uw_settings._incidentals:
+                setattr(self, key, values)
             else:
                 if type(values) != list:
                     values = [values]
@@ -172,7 +217,7 @@ class UniversalWrapper:
         :param flag: flag to add dashes to
         :returns: flag with dashes
         """
-        if len(str(flag)) > 1 and self.uw_settings.double_dash:
+        if len(str(flag)) > 1 and self._double_dash:
             return f"--{flag.replace('_', self.uw_settings.flag_divider)}"
         else:
             return f"-{flag}"
@@ -218,38 +263,59 @@ class UniversalWrapper:
         return command
 
     def _run_cmd(self, cmd: List[str]) -> str:
-        """Forwards the generated command to subprocess and handles
-        error displaying
+        """Forwards the generated command to subprocess
 
         :param: List of string which combined make the shell command
         :returns: Output of shell command
         """
-        try:
-            output = subprocess.check_output(cmd)
-        except subprocess.CalledProcessError as e:
-            print(e.output.decode())
-            raise
-        return self._output_modifier(output)
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=self._cwd,
+            env=self._env,
+        )
+        stdout, stderr = proc.communicate()
+        return self._raise_or_return(stdout, stderr, proc.returncode, cmd)
 
     async def _async_run_cmd(self, cmd: List[str]) -> str:
-        """Forwards the generated command to async subprocess and
-        handles error displaying
+        """Forwards the generated command to async subprocess
 
         :param: List of string which combined make the shell command
         :returns: Output of shell command
         """
         proc = await asyncio.create_subprocess_exec(
-            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=self._cwd,
+            env=self._env,
         )
 
         async def _output(proc):
             stdout, stderr = await proc.communicate()
-            if proc.returncode == 0:
-                return self._output_modifier(stdout)
-            print(stderr.decode())
-            raise subprocess.CalledProcessError(proc.returncode, cmd, stdout, stderr)
+            return self._raise_or_return(stdout, stderr, proc.returncode, cmd)
 
         return _output(proc)
+
+    def _raise_or_return(
+        self, stdout: ByteString, stderr: ByteString, return_code: int, cmd: List[str]
+    ) -> str:
+        """Handles the error displaying for the subprocesses
+
+        :param stdout: subprocess output
+        :param stderr: subprocess error output
+        :param return_code: return code of the process
+        :param cmd: original command, used for error message
+        :returns: Output of shell command
+        """
+        if return_code == 0:
+            if stderr and self._warn_stderr:
+                warnings.warn("\n" + stderr.decode(), UserWarning, stacklevel=4)
+            if self._return_stderr:
+                stdout = stderr + b"\n" + stdout
+            return self._output_modifier(stdout)
+        raise SubprocessError(return_code, cmd, stdout, stderr)
 
     def _output_modifier(self, output: str) -> str:
         """Modifies the subprocess' output according to uw_settings
@@ -257,25 +323,40 @@ class UniversalWrapper:
         :param output: string to modify, e.g. parse
         :returns: modified output
         """
-        if self.uw_settings.output_decode:
+        if self._output_decode:
             output = output.decode()
-        if self.uw_settings.output_yaml:
-            try:
-                output = yaml.safe_load(output)
-            except Exception as e:
-                logging.warning("Parse yaml failed")
-                logging.warning(e)
-        if self.uw_settings.output_json:
-            try:
-                output = json.loads(output)
-            except Exception as e:
-                logging.warning("Parse json failed")
-                logging.warning(e)
-        if self.uw_settings.output_splitlines:
+        if self._output_yaml:
+            output = yaml.safe_load(output)
+        if self._output_json:
+            output = json.loads(output)
+        if self._output_splitlines:
             output = output.splitlines()
         for cmd in self.uw_settings.output_custom:
             exec(cmd)
-        return output
+        return self._pretty_output(output)
+
+    def _pretty_output(self, output: object) -> object:
+        """Makes pretty prints when debugging
+
+        :param output: The output of the cmd command
+        :returns: Output with __repr__ set to pretty print when debugging
+        """
+
+        class UWOutput(type(output)):
+            def __repr__(self):
+                if isinstance(self, dict) or isinstance(self, list):
+                    return json.dumps(self, indent=2, default=str)
+                return self
+
+            def __getattribute__(self, __name: str) -> Any:
+                if not hasattr(super(), __name):
+                    msg = (
+                        f"'{type(output).__name__}' object has no attribute '{__name}'"
+                    )
+                    raise AttributeError(msg)
+                return super().__getattribute__(__name)
+
+        return UWOutput(output)
 
     def __getattr__(self, attr: str) -> object:
         """Handles the creation of (sub)classes
