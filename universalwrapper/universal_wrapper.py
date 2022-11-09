@@ -70,6 +70,8 @@ class UWSettings:
         if key == "divider" and hasattr(self, key):
             self._reset_command(value)
         object.__setattr__(self, key, value)
+        if self._freeze and key == "cmd":
+            self._reset_command()
 
     def _reset_command(self, divider: str = None) -> None:
         """Resets cmd_chain to its original value
