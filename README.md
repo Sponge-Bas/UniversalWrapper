@@ -138,17 +138,13 @@ from universalwrapper import foo
 
 foo.uw_settings.class_divider = "."
 foo.uw_settings.enable_async = True
-
-...
 ```
 
 To use a local setting, use it as a keyword argument with a leading underscore:
 ```python3
 from universalwrapper import foo
 
-foo.bar(_output_yaml_ = True)
-
-...
+foo.bar(_output_yaml = True)
 ```
 
 # Limitations
