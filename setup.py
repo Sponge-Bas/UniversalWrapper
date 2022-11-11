@@ -1,10 +1,15 @@
-from distutils.core import setup
+from setuptools import setup
+from pathlib import Path
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
+
 setup(
   name = 'UniversalWrapper',
   packages = ['universalwrapper', 'uw'],
-  version = '2.1',
+  version = '2.3',
   license='MIT',
-  long_description="Visit https://github.com/Basdbruijne/UniversalWrapper",
+  long_description=long_description,
+  long_description_content_type='text/markdown',
   author = 'Bas de Bruijne',
   author_email = 'basdbruijne@gmail.com',
   url = 'https://github.com/Basdbruijne/UniversalWrapper',
