@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text()
 setup(
   name = 'UniversalWrapper',
   packages = ['universalwrapper', 'uw'],
-  version = '2.3',
+  version = '2.4',
   license='MIT',
   long_description=long_description,
   long_description_content_type='text/markdown',

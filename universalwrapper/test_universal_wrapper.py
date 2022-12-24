@@ -142,6 +142,16 @@ class TestUniversalWrapper(unittest.TestCase):
             env=None,
         )
 
+        run = uw_test.run
+        run("a", bar=["foo", "bar"])
+        mock_Popen.assert_called_with(
+            ["uw-test", "run", "a", "-bar", "foo", "-bar", "bar"],
+            stdout=ANY,
+            stderr=ANY,
+            cwd=None,
+            env=None,
+        )
+
     @patch("universalwrapper.UniversalWrapper._raise_or_return")
     @patch("universalwrapper.subprocess.Popen")
     def test_input_add(self, mock_Popen, mock_raise_or_return):
@@ -354,6 +364,42 @@ class TestUniversalWrapper(unittest.TestCase):
         uw_test = universalwrapper.uw_test
         proc = Mock()
         proc.communicate.return_value = (
+            b"""\
+- foo: bar
+  config:
+    bar: foo""",
+            "",
+        )
+        proc.returncode = 0
+        mock_Popen.return_value = proc
+
+        uw_test.uw_settings.output_parser = "yaml"
+        result = uw_test()
+        self.assertEqual(result, [{"foo": "bar", "config": {"bar": "foo"}}])
+
+    @patch("universalwrapper.subprocess.Popen")
+    def test_parse_yaml_auto(self, mock_Popen):
+        uw_test = universalwrapper.uw_test
+        proc = Mock()
+        proc.communicate.return_value = (
+            b"""\
+- foo: bar
+  config:
+    bar: foo""",
+            "",
+        )
+        proc.returncode = 0
+        mock_Popen.return_value = proc
+
+        uw_test.uw_settings.output_parser = "auto"
+        result = uw_test()
+        self.assertEqual(result, [{"foo": "bar", "config": {"bar": "foo"}}])
+
+    @patch("universalwrapper.subprocess.Popen")
+    def test_parse_yaml_depricated(self, mock_Popen):
+        uw_test = universalwrapper.uw_test
+        proc = Mock()
+        proc.communicate.return_value = (
             """\
 - foo: bar
   config:
@@ -372,6 +418,36 @@ class TestUniversalWrapper(unittest.TestCase):
     def test_parse_json(self, mock_Popen):
         uw_test = universalwrapper.uw_test
         proc = Mock()
+        proc.communicate.return_value = (
+            b'{"foo": "bar", "config": {"bar": "foo"}}',
+            "",
+        )
+        proc.returncode = 0
+        mock_Popen.return_value = proc
+
+        uw_test.uw_settings.output_parser = "json"
+        result = uw_test()
+        self.assertEqual(result, {"foo": "bar", "config": {"bar": "foo"}})
+
+    @patch("universalwrapper.subprocess.Popen")
+    def test_parse_json_auto(self, mock_Popen):
+        uw_test = universalwrapper.uw_test
+        proc = Mock()
+        proc.communicate.return_value = (
+            b'{"foo": "bar", "config": {"bar": "foo"}}',
+            "",
+        )
+        proc.returncode = 0
+        mock_Popen.return_value = proc
+
+        uw_test.uw_settings.output_parser = "auto"
+        result = uw_test()
+        self.assertEqual(result, {"foo": "bar", "config": {"bar": "foo"}})
+
+    @patch("universalwrapper.subprocess.Popen")
+    def test_parse_json_depricated(self, mock_Popen):
+        uw_test = universalwrapper.uw_test
+        proc = Mock()
         proc.communicate.return_value = ('{"foo": "bar", "config": {"bar": "foo"}}', "")
         proc.returncode = 0
         mock_Popen.return_value = proc
@@ -385,6 +461,30 @@ class TestUniversalWrapper(unittest.TestCase):
     def test_parse_newline(self, mock_Popen):
         uw_test = universalwrapper.uw_test
         proc = Mock()
+        proc.communicate.return_value = (b"a\nb\nc", "")
+        proc.returncode = 0
+        mock_Popen.return_value = proc
+
+        uw_test.uw_settings.output_parser = "splitlines"
+        result = uw_test()
+        self.assertEqual(result, ["a", "b", "c"])
+
+    @patch("universalwrapper.subprocess.Popen")
+    def test_parse_newline_auto(self, mock_Popen):
+        uw_test = universalwrapper.uw_test
+        proc = Mock()
+        proc.communicate.return_value = (b"a\nb\nc", "")
+        proc.returncode = 0
+        mock_Popen.return_value = proc
+
+        uw_test.uw_settings.output_parser = "auto"
+        result = uw_test()
+        self.assertEqual(result, "a\nb\nc")
+
+    @patch("universalwrapper.subprocess.Popen")
+    def test_parse_newline_depricated(self, mock_Popen):
+        uw_test = universalwrapper.uw_test
+        proc = Mock()
         proc.communicate.return_value = ("a\nb\nc", "")
         proc.returncode = 0
         mock_Popen.return_value = proc
@@ -393,6 +493,19 @@ class TestUniversalWrapper(unittest.TestCase):
         uw_test.uw_settings.output_splitlines = True
         result = uw_test()
         self.assertEqual(result, ["a", "b", "c"])
+
+    @patch("universalwrapper.subprocess.Popen")
+    def test_parse_wrong_parser(self, mock_Popen):
+        uw_test = universalwrapper.uw_test
+        proc = Mock()
+        proc.communicate.return_value = (b"a\nb\nc", "")
+        proc.returncode = 0
+        mock_Popen.return_value = proc
+
+        uw_test.uw_settings.output_parser = "foobar"
+
+        with self.assertRaises(ValueError):
+            result = uw_test()
 
     def test_load_settings(self):
         uw_test = universalwrapper.uw_test

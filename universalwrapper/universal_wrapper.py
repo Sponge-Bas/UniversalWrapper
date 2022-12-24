@@ -4,13 +4,14 @@
 # held responsible for any problems caused by the use of this module.
 
 import asyncio
+import copy
 import json
 import shlex
 import subprocess
-import yaml
 import warnings
+import yaml
 
-from typing import ByteString, Union, List, Dict, Any
+from typing import ByteString, Union, List, Dict
 
 
 class UWSettings:
@@ -23,7 +24,6 @@ class UWSettings:
 
     def __init__(self) -> None:
         """Loads default uw settings"""
-
         # Global settings
         self.cmd: str = ""  # Base command
         self.divider: str = "-"  # String to replace "_" with in commands
@@ -45,11 +45,18 @@ class UWSettings:
         self.return_stderr: bool = False  # Forward stderr output to the return values
         self.output_splitlines: bool = False  # Split lines of output
         self.output_decode: bool = True  # Decode output to str
+        self.output_parser: str = ""  # Output parser (yaml, json, splitlines, auto)
         self.warn_stderr: bool = True  # Forward stderr output to warnings
         self.cwd: str = None  # Current working directory
         self.env: str = None  # Env for environment variables
 
-        self._cmd_chain: List[str] = []
+        self._depricated = [
+            "output_splitlines",
+            "output_decode",
+            "output_yaml",
+            "output_json",
+        ]
+
         self._freeze: bool = True
 
     def __setattr__(self, key: str, value: object) -> None:
@@ -69,9 +76,18 @@ class UWSettings:
             self._incidentals.append(key)
         if key == "divider" and hasattr(self, key):
             self._reset_command(value)
+        if key in getattr(self, "_depricated", []):
+            self.deprecationwarning(key, stacklevel=3)
+
         object.__setattr__(self, key, value)
-        if self._freeze and key == "cmd":
-            self._reset_command()
+
+    def deprecationwarning(self, key, stacklevel):
+        warnings.warn(
+            f"The {key} option is being replaced by 'output_parser' and will not be"
+            "accepted anymore in UniversalWrapper 2.5",
+            DeprecationWarning,
+            stacklevel=stacklevel,
+        )
 
     def _reset_command(self, divider: str = None) -> None:
         """Resets cmd_chain to its original value
@@ -82,25 +98,6 @@ class UWSettings:
         """
         if divider:
             self.cmd = self.cmd.replace(self.divider, divider)
-        self._freeze = False
-        self._cmd_chain = self.cmd.split(" ")
-        self._freeze = True
-
-    def _update_command(self, value: str) -> None:
-        """Add new value to the cmd_chain
-
-        :param value: value to add to the cmd_chain
-        """
-        self._freeze = False
-        self._cmd_chain = (
-            (
-                f"{' '.join(self._cmd_chain)}{self.class_divider}"
-                f"{value.replace('_', self.divider)}"
-            )
-            .replace("_", self.divider)
-            .split(" ")
-        )
-        self._freeze = True
 
 
 class SubprocessError(subprocess.CalledProcessError):
@@ -157,6 +154,10 @@ class UniversalWrapper:
         self.uw_settings._reset_command()
         self._flags_to_remove = []
 
+    @property
+    def __doc__(self):
+        return self(help=True)
+
     def __call__(self, *args: Union[int, str], **kwargs: Union[int, str]) -> str:
         """Receives the users commands and directs them to the right functions
 
@@ -165,7 +166,7 @@ class UniversalWrapper:
         either be `key = value` for `--key value` or `key = True` for `--key`
         :returns: Response of the shell call
         """
-        command = self.uw_settings._cmd_chain[:]
+        command = self.uw_settings.cmd.split(" ")
         self.uw_settings._reset_command()
         for key in self.uw_settings._incidentals:
             setattr(self, f"_{key}", getattr(self.uw_settings, key))
@@ -199,6 +200,8 @@ class UniversalWrapper:
             command.append(str(string))
         for key, values in kwargs.items():
             if key.startswith("_") and key[1:] in self.uw_settings._incidentals:
+                if key[1:] in self.uw_settings._depricated:
+                    self.uw_settings.deprecationwarning(key[1:], stacklevel=4)
                 setattr(self, key, values)
             else:
                 if type(values) != list:
@@ -316,8 +319,38 @@ class UniversalWrapper:
                 warnings.warn("\n" + stderr.decode(), UserWarning, stacklevel=4)
             if self._return_stderr:
                 stdout = stderr + b"\n" + stdout
-            return self._output_modifier(stdout)
+            if self._output_parser:
+                return self._parse_output(stdout)
+            else:
+                return self._output_modifier(stdout)
         raise SubprocessError(return_code, cmd, stdout, stderr)
+
+    def _parse_output(self, output: str):
+        output = output.decode()
+        options = ["yaml", "json", "splitlines", "auto"]
+        if not self._output_parser in options:
+            raise ValueError(
+                f"{self._output_parser} is not a valid parser, choose from {options}"
+            )
+
+        if self._output_parser == "yaml":
+            return yaml.safe_load(output)
+        elif self._output_parser == "json":
+            return json.loads(output)
+        elif self._output_parser == "splitlines":
+            return output.splitlines()
+        elif self._output_parser == "auto":
+            try:
+                return json.loads(output)
+            except json.decoder.JSONDecodeError:
+                pass
+            try:
+                parsed = yaml.safe_load(output)
+                if isinstance(parsed, list) or isinstance(parsed, dict):
+                    return parsed
+            except yaml.YAMLError:
+                pass
+            return output
 
     def _output_modifier(self, output: str) -> str:
         """Modifies the subprocess' output according to uw_settings
@@ -335,39 +368,16 @@ class UniversalWrapper:
             output = output.splitlines()
         for cmd in self.uw_settings.output_custom:
             exec(cmd)
-        return self._pretty_output(output)
+        return output
 
-    def _pretty_output(self, output: object) -> object:
-        """Makes pretty prints when debugging
-
-        :param output: The output of the cmd command
-        :returns: Output with __repr__ set to pretty print when debugging
-        """
-
-        class UWOutput(type(output)):
-            def __repr__(self):
-                if isinstance(self, dict) or isinstance(self, list):
-                    return json.dumps(self, indent=2, default=str)
-                return self
-
-            def __getattribute__(self, __name: str) -> Any:
-                if not hasattr(super(), __name):
-                    msg = (
-                        f"'{type(output).__name__}' object has no attribute '{__name}'"
-                    )
-                    raise AttributeError(msg)
-                return super().__getattribute__(__name)
-
-        return UWOutput(output)
-
-    def __getattr__(self, attr: str) -> object:
-        """Handles the creation of (sub)classes
-
-        :param attr: next section of command to construct
-        :returns: universalwrapper class
-        """
-        self.uw_settings._update_command(attr)
-        return self
+    def __getattr__(self, attr):
+        """Handles the creation of (sub)classes"""
+        subclass = UniversalWrapper(
+            f"{self.uw_settings.cmd}{self.uw_settings.class_divider}"
+            f"{attr.replace('_', self.uw_settings.divider)}",
+            uw_settings=copy.copy(self.uw_settings),
+        )
+        return subclass
 
 
 def __getattr__(attr):
