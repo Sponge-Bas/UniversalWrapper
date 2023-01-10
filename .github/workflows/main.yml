@@ -7,6 +7,8 @@ on:
     paths:
       - universalwrapper/**
       - tests/**
+      - tox.ini
+      - .github/workflows/main.yml
 
 jobs:
   build:
