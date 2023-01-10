@@ -14,6 +14,7 @@ setup(
   author_email = 'basdbruijne@gmail.com',
   url = 'https://github.com/Basdbruijne/UniversalWrapper',
   keywords = ['wrapper', 'cli', 'subprocess'],
+  install_requires = ['autothread', 'pyyaml'],
   classifiers=[  # Optional
     # How mature is this project? Common values are
     #   3 - Alpha
