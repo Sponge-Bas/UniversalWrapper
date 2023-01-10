@@ -609,6 +609,28 @@ class TestUniversalWrapper(unittest.TestCase):
         rm("__uwunittest", recursive=True)
         self.assertTrue("__uwunittest" not in ls(_enable_async=False))
 
+    def test_parallel(self):
+        from universalwrapper import ls, mkdir, touch, rm
+
+        ls.uw_settings.parallel = True
+        mkdir.uw_settings.parallel = True
+
+        try:
+            rm("__uwunittest", recursive=True)
+        except subprocess.CalledProcessError:
+            pass
+
+        mkdir("__uwunittest")
+        touch("__uwunittest/a.test")
+        touch("__uwunittest/b.test")
+
+        files = ls("__uwunittest")
+
+        self.assertEqual(files, "a.test\nb.test\n")
+
+        rm("__uwunittest", recursive=True)
+        self.assertTrue("__uwunittest" not in ls(_enable_async=False))
+
 
 if __name__ == "__main__":
     unittest.main()

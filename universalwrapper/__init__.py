@@ -1,4 +1,4 @@
 import sys
-import universalwrapper.universal_wrapper as universalwrapper
+import universalwrapper.universal_wrapper as universal_wrapper
 
-sys.modules[__name__] = universalwrapper
+sys.modules[__name__] = universal_wrapper

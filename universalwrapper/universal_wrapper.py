@@ -4,6 +4,7 @@
 # held responsible for any problems caused by the use of this module.
 
 import asyncio
+import autothread
 import copy
 import json
 import shlex
@@ -49,12 +50,14 @@ class UWSettings:
         self.warn_stderr: bool = True  # Forward stderr output to warnings
         self.cwd: str = None  # Current working directory
         self.env: str = None  # Env for environment variables
+        self.parallel: bool = False  # run subprocess in background, but without async
 
         self._depricated = [
             "output_splitlines",
             "output_decode",
             "output_yaml",
             "output_json",
+            "output_custom",
         ]
 
         self._freeze: bool = True
@@ -148,8 +151,6 @@ class UniversalWrapper:
             self.uw_settings = uw_settings
         else:
             self.uw_settings = UWSettings()
-            for key, value in kwargs.items():
-                setattr(self.uw_settings, key, value)
         self.uw_settings.cmd = cmd.replace("_", self.uw_settings.divider)
         self.uw_settings._reset_command()
         self._flags_to_remove = []
@@ -180,6 +181,8 @@ class UniversalWrapper:
             return
         if self._enable_async:
             return self._async_run_cmd(cmd)
+        elif self._parallel:
+            return self._run_cmd_parallel(cmd)
         else:
             return self._run_cmd(cmd)
 
@@ -268,6 +271,23 @@ class UniversalWrapper:
         return command
 
     def _run_cmd(self, cmd: List[str]) -> str:
+        """Forwards the generated command to subprocess
+
+        :param: List of string which combined make the shell command
+        :returns: Output of shell command
+        """
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=self._cwd,
+            env=self._env,
+        )
+        stdout, stderr = proc.communicate()
+        return self._raise_or_return(stdout, stderr, proc.returncode, cmd)
+
+    @autothread.async_threaded()
+    def _run_cmd_parallel(self, cmd: List[str]) -> Union[str, dict, list]:
         """Forwards the generated command to subprocess
 
         :param: List of string which combined make the shell command
