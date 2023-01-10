@@ -1,3 +1,5 @@
+[![uw_functional_tests](https://github.com/Basdbruijne/UniversalWrapper/actions/workflows/main.yml/badge.svg)](https://github.com/Basdbruijne/UniversalWrapper/actions/workflows/main.yml)
+
 # UniversalWrapper
 UniversalWrapper is a convenient shell wrapper for python, allowing you to interact with command line interfaces as if they were Python modules. UniversalWrapper now also supports async commands since version 2.0.
 
