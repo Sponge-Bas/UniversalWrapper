@@ -115,21 +115,18 @@ flag_divider: str = "-"  # String to replace "_" with in flags
 input_add: Dict[str:int] = {}  # {extra command, index where to add it}
 input_move: Dict[str:int] = {}  # {extra command, index where to move it}
 input_custom: List[str] = []  # custom command: e.g. "command.reverse()"
-output_custom: List[str] = []  # custom command: e.g. "output.reverse()"
 
 # Local or global settings
 root: bool = False  # Run commands as sudo, same as `input_add={0: "sudo"}`
 debug: bool = False  # Don't run commands but instead print the command
 double_dash: bool = True  # Use -- instead of - for multi-character flags
-output_yaml: bool = False  # Parse yaml from output
-output_json: bool = False  # Parse json from output
 enable_async: bool = False  # Globally enable asyncio
 return_stderr: bool = False # Forward stderr output to the return values
-output_splitlines: bool = False  # Split lines of output
-output_decode: bool = True  # Decode output to str
+output_parser: str = ""  # Output parser (yaml, json, splitlines, auto)
 warn_stderr: bool = True # Forward stderr output to warnings
 cwd: str = None  # Current working directory
 env: str = None  # Env for environment variables
+parallel: bool = False  # run subprocess in background, but without async
 ```
 
 To use a global setting, assign the desired variable to `uw_settings`:
@@ -144,7 +141,7 @@ To use a local setting, use it as a keyword argument with a leading underscore:
 ```python3
 from universalwrapper import foo
 
-foo.bar(_output_yaml = True)
+foo.bar(_output_parser = "yaml")
 ```
 
 # Limitations
